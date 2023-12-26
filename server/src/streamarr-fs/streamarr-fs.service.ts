@@ -7,11 +7,12 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import pWaitFor from 'p-wait-for';
 import WebTorrent, { TorrentFile } from 'webtorrent';
 import { TorrentsService } from '../torrents/torrents.service';
 import { WebTorrentService } from '../webtorrent/webtorrent.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { StreamarrFsFileEvent } from 'src/types';
+import { StreamarrFsFileEvent } from '../types';
 
 type FuseCallback = (returnCode: number, ...args: any) => void;
 export type FileStat = {
@@ -447,11 +448,46 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
     if (!resumedTorrent) {
       const torrentInfo = await this.torrentService.findOneByInfoHash(infoHash);
-      const startedTorrent =
-        await this.webtorrentService.startTorrentWithMagnetLink(
-          torrentInfo.magnetURI,
+
+      const torrentInClient =
+        await this.webtorrentService.getTorrentWithInfoHash(infoHash);
+      if (!torrentInClient) {
+        this.logger.debug(
+          `torrent ${infoHash} not in client starting new torrent.`,
         );
-      return startedTorrent;
+        const startedTorrent =
+          await this.webtorrentService.startTorrentWithMagnetLink(
+            torrentInfo.magnetURI,
+          );
+        return startedTorrent;
+      }
+
+      if (torrentInClient && !torrentInClient.ready) {
+        this.logger.debug(
+          `torrent ${infoHash} is in client waiting for to be readable.`,
+        );
+
+        try {
+          await pWaitFor(
+            async () => {
+              const polledTorrent =
+                await this.webtorrentService.getTorrentWithInfoHash(infoHash);
+              return polledTorrent.ready;
+            },
+            {
+              interval: 1000,
+              timeout: 1000 * 30,
+            },
+          );
+          const readyTorrent =
+            await this.webtorrentService.getTorrentWithInfoHash(infoHash);
+          return readyTorrent;
+        } catch (err) {
+          this.logger.error(`ERROR while waiting for torrent ${infoHash}`);
+          this.logger.error(err);
+          return null;
+        }
+      }
     }
   }
 }

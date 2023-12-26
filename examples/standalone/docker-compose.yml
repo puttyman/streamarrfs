@@ -1,0 +1,26 @@
+version: '3'
+services:
+  streamarrfs:
+    image: puttyman/streamarrfs:latest
+    ports:
+      - 3000:3000
+    environment:
+      - STREAMARR_DB_PATH=/db/streamarr.sqlite
+      - NODE_ENV=development
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor=unconfined
+    volumes:
+      - /tmp/streamarrfs-db:/db
+      - /tmp/streamarrfs-downloads:/downloads
+      - /tmp:/tmp:shared
+    command: npm run start:prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
