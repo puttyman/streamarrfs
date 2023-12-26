@@ -1,6 +1,6 @@
 version: '3'
 services:
-  streamarr:
+  streamarrfs:
     build:
       context: .
       dockerfile: ./docker/build.Dockerfile
