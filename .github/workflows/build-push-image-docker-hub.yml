@@ -22,4 +22,6 @@ jobs:
           file: docker/build.Dockerfile
           target: prod
           push: true
-          tags: puttyman/streamarrfs:latest
+          tags: 
+            puttyman/streamarrfs:latest
+            puttyman/streamarrfs:0.0.1
