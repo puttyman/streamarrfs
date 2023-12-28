@@ -15,6 +15,15 @@ export class TorrentFromQueueService {
     const torrent = await this.torrentsService.popQueuedTorrent();
     if (torrent) {
       try {
+        if (torrent.feedURL.startsWith('free')) {
+          await this.torrentsService.update(torrent.id, {
+            ...torrent,
+            status: TorrentInfoStatus.READY,
+            isVisible: true,
+          });
+          return;
+        }
+
         const { infoHash, magnetURI, name, files } =
           await this.workerPool.getTorrentInfoFromFeedUrl(torrent.feedURL);
         await this.torrentsService.update(torrent.id, {

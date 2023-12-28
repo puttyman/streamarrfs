@@ -90,7 +90,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       },
       {
         autoUnmount: true,
-        debug: true, //process.env.NODE_ENV !== 'production',
+        debug: process.env.NODE_ENV !== 'production',
         timeout: 1000 * 100,
         // nonEmpty: true,
         allowOther: true,
@@ -99,7 +99,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       },
     );
 
-    await this.mount();
+    // await this.mount();
   }
 
   private async mount() {

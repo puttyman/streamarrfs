@@ -14,7 +14,7 @@ import { WorkerPool } from './worker.pool';
 import {
   useWebtorrentServiceProvider,
   useTorrentUtilProvider,
-} from './providers';
+} from './module-providers';
 import { TorrentsFromFeedService } from './producers/torrents-from-feed.service';
 import { TorrentFromQueueService } from './producers/torrents-from-queue.service';
 import { TorrentsFreeService } from './producers/torrents-free.service';

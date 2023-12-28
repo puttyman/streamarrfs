@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   useWebtorrentServiceProvider,
   useTorrentUtilProvider,
-} from '../providers';
+} from '../module-providers';
 
 @Module({
   providers: [

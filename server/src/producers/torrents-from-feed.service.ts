@@ -1,12 +1,12 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import RssParser from 'rss-parser';
 
 import { TorrentsService } from '../torrents/torrents.service';
 
 @Injectable()
-export class TorrentsFromFeedService {
+export class TorrentsFromFeedService implements OnModuleInit {
   private readonly logger = new Logger(TorrentsFromFeedService.name);
   private isTaskRunning: boolean;
   private rssParser;
@@ -26,7 +26,11 @@ export class TorrentsFromFeedService {
     );
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS, { name: TorrentsFromFeedService.name })
+  async onModuleInit() {
+    await this.torrentProducer();
+  }
+
+  @Cron(CronExpression.EVERY_HOUR, { name: TorrentsFromFeedService.name })
   async torrentProducer() {
     if (this.configService.get<string>('STREAMARR_FEED_DISABLED') === 'true') {
       this.logger.log(`aborting feed is disabled`);

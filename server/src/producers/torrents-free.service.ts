@@ -46,10 +46,10 @@ export class TorrentsFreeService implements OnModuleInit {
             infoHash,
             name,
             files: JSON.stringify(files, null, 0),
-            status: TorrentInfoStatus.READY,
-            isVisible: true,
+            status: TorrentInfoStatus.QUEUED,
+            isVisible: false,
             feedGuid: infoHash,
-            feedURL: '',
+            feedURL: `free-${infoHash}`,
           });
         }
       }
