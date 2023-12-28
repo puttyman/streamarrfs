@@ -99,7 +99,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       },
     );
 
-    // await this.mount();
+    await this.mount();
   }
 
   private async mount() {
