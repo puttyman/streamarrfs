@@ -1,3 +1,5 @@
+import type { LogLevel } from '@nestjs/common';
+
 const STREAMARR_FEED_URLS = Object.keys(process.env)
   .filter((envName) =>
     envName.startsWith(
@@ -5,6 +7,22 @@ const STREAMARR_FEED_URLS = Object.keys(process.env)
     ),
   )
   .map((feedKey) => process.env[feedKey]);
+
+const logLevel = (): Array<LogLevel> => {
+  if (process.env.STREAMARR_LOG_LEVEL) {
+    return process.env.STREAMARR_LOG_LEVEL.split(',').map(
+      (level) => level.trim() as LogLevel,
+    );
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return ['error'];
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return ['debug', 'error', 'fatal', 'log', 'warn', 'verbose'];
+  }
+};
 
 export default () => ({
   STREAMARR_DB_PATH: process.env.STREAMARR_DB_PATH ?? 'db/db.sqlite',
@@ -43,4 +61,6 @@ export default () => ({
   STREAMARRFS_MOUNT_PATH:
     process.env.STREAMARRFS_MOUNT_PATH ?? '/tmp/streamarrfs',
   STREAMARR_SERVER_PORT: parseInt(process.env.STREAMARR_SERVER_PORT) || 3000,
+
+  STREAMARR_LOG_LEVEL: logLevel(),
 });
