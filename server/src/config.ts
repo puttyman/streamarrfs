@@ -16,7 +16,7 @@ const logLevel = (): Array<LogLevel> => {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    return ['error'];
+    return ['error', 'log'];
   }
 
   if (process.env.NODE_ENV !== 'production') {
