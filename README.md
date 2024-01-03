@@ -1,12 +1,12 @@
 # streamarrfs (experimental)
 
-Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by (webtorrent)[https://github.com/webtorrent/webtorrent].
+Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [⚡️ webtorrent](https://github.com/webtorrent/webtorrent).
 
 ## How does it work?
-  1. Streamarrfs finds torrents from your favorite torrent indexer. e.g. (Jackett)[https://github.com/Jackett/Jackett]
+  1. Streamarrfs finds torrents from your favorite torrent indexer. e.g. [Jackett](https://github.com/Jackett/Jackett)
   2. Find the list of file that is in the torrent.
   2. Loads info about torrents and including files in its internal database (sqlite).
-  3. Mount and creates a virtual directory through (fuse)[https://github.com/libfuse/libfuse] to simulate as if the files from the torrent are present.
+  3. Mount and creates a virtual directory through [fuse](https://github.com/libfuse/libfuse) to simulate as if the files from the torrent are present.
   4. Whenever a read if requested to a given file, Streamarrfs starts the torrent and stream through the portion of the file requested.
 
 ## Features
@@ -16,7 +16,7 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by (we
 
 ## Setup instructions
 
-At the present this project only supports running as a docker image and on a x64 architecture. PR is welcomed for any features. Given this project is at an experimental stage it is recommend to use a seperate plex server instance.
+At the present this project only supports running as a docker image and on a amd64 architecture. PR is welcomed for any features. Given this project is at an experimental stage it is recommend to use a seperate plex server instance.
 
 ### Dependencies & Prerequisites
   - A plex account and able to generate a claim token at https://www.plex.tv/claim/ .
