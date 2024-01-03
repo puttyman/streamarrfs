@@ -3,3 +3,4 @@ db/streamarr.sqlite
 mnt/*
 server/src/config.dev.ts
 server/downloads/*
+docker/compose/db/db.sqlite
