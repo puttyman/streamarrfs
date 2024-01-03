@@ -33,12 +33,12 @@ export class TorrentsFromFeedService implements OnModuleInit {
   @Cron(CronExpression.EVERY_HOUR, { name: TorrentsFromFeedService.name })
   async torrentProducer() {
     if (this.configService.get<string>('STREAMARR_FEED_DISABLED') === 'true') {
-      this.logger.log(`aborting feed is disabled`);
+      this.logger.verbose(`aborting feed is disabled`);
       return;
     }
 
     if (this.isTaskRunning) {
-      this.logger.log(`aborting an existing task running already`);
+      this.logger.verbose(`aborting an existing task running already`);
       return;
     }
 

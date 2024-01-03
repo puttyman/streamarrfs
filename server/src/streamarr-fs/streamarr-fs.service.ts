@@ -218,7 +218,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   }
 
   private async readdir(path: string, cb: FuseCallback): Promise<void> {
-    this.logger.debug(`readdir=${path}`);
+    this.logger.verbose(`readdir=${path}`);
     if (path === '/') {
       const rootDirInfo = await this.torrentService.visibleTorrentsRootIndex();
       const hashFolders = rootDirInfo.map((torrent) => torrent.infoHash);
@@ -259,7 +259,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   }
 
   private async getattr(path: string, cb: FuseCallback): Promise<void> {
-    this.logger.debug('getattr', path);
+    this.logger.verbose('getattr', path);
     if (path === '/') {
       const dirSize = (await this.torrentService.visibleTorrentsRootIndex())
         .length;
@@ -336,7 +336,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   }
 
   private async open(path: string, flags: number, cb: FuseCallback) {
-    this.logger.debug('open', path, flags);
+    this.logger.verbose('open', path, flags);
 
     if (this.isPathStartsWithTorrentHash(path)) {
       const infoHash = this.getInfoHashFromPath(path);
@@ -362,7 +362,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   }
 
   private async release(path, fd, cb) {
-    this.logger.debug('realease', path, fd);
+    this.logger.verbose('realease', path, fd);
     if (this.isPathStartsWithTorrentHash(path)) {
       const infoHash = this.getInfoHashFromPath(path);
       await this.notifyTorrentRelease(infoHash);
@@ -372,7 +372,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   private async read(path, fd, buf, len, pos, cb) {
     try {
-      // this.logger.debug('read', path, len, pos);
+      this.logger.verbose('read', path, len, pos);
       if (this.isPathStartsWithTorrentHash(path)) {
         const infoHash = this.getInfoHashFromPath(path);
 
@@ -460,7 +460,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       const torrentInClient =
         await this.webtorrentService.getTorrentWithInfoHash(infoHash);
       if (!torrentInClient) {
-        this.logger.debug(
+        this.logger.log(
           `torrent ${infoHash} not in client starting new torrent.`,
         );
         const startedTorrent =
@@ -471,7 +471,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       }
 
       if (torrentInClient && !torrentInClient.ready) {
-        this.logger.debug(
+        this.logger.log(
           `torrent ${infoHash} is in client waiting for to be readable.`,
         );
 
