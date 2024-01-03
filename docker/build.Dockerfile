@@ -27,6 +27,7 @@ CMD ["npm", "run", "test"]
 ############# prod ##########
 FROM base as prod
 COPY --from=proddeps /server/dist /server/dist
+COPY --from=proddeps /server/db /server/db
 COPY --from=proddeps /server/node_modules /server/node_modules
 COPY --from=proddeps /server/*.json /server/
 CMD ["npm", "run", "start:prod"]

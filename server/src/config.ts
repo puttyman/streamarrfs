@@ -7,7 +7,7 @@ const STREAMARR_FEED_URLS = Object.keys(process.env)
   .map((feedKey) => process.env[feedKey]);
 
 export default () => ({
-  STREAMARR_DB_PATH: process.env.STREAMARR_DB_PATH ?? '../db/streamarr.sqlite',
+  STREAMARR_DB_PATH: process.env.STREAMARR_DB_PATH ?? 'db/db.sqlite',
 
   STREAMARR_ADD_FREE_TORRENTS:
     process.env.STREAMARR_ADD_FREE_TORRENTS == 'true' || true,
@@ -28,7 +28,8 @@ export default () => ({
   STREAMARR_WEBTORRENT_DOWNLOAD_LIMIT:
     parseInt(process.env.STREAMARR_WEBTORRENT_DOWNLOAD_LIMIT) || -1,
   STREAMARR_WEBTORRENT_DOWNLOAD_PATH:
-    process.env.STREAMARR_WEBTORRENT_DOWNLOAD_PATH ?? './downloads',
+    process.env.STREAMARR_WEBTORRENT_DOWNLOAD_PATH ??
+    '/tmp/streamarrfs-downloads',
   STREAMARR_WEBTORRENT_TORRENT_PORT:
     parseInt(process.env.STREAMARR_WEBTORRENT_TORRENT_PORT) || 0,
 

@@ -1,31 +1,51 @@
 version: '3'
 services:
-  plex:
-    image: lscr.io/linuxserver/plex:latest
-    container_name: plex
-    depends_on:
-      - fuse
-    ports:
-      - 32400:32400/tcp
-      - 3005:3005/tcp
-      - 8324:8324/tcp
-      - 32470:32469/tcp
-      - 1900:1900/udp
-      - 32410:32410/udp
-      - 32412:32412/udp
-      - 32413:32413/udp
-      - 32416:32414/udp
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Melbourne/Australia
-      - VERSION=docker
-      - PLEX_CLAIM=claim-xxxxxxxxxxxxxxxxxxxx
-      - ADVERTISE_IP="http://localhost:32400/"
-    volumes:
-      - ./plex/config:/config
-      - ./plex/transcode:/transcode
-      - ./mnt:/streamarfs:shared
+    plex:
+        image: plexinc/pms-docker
+        depends_on: 
+          streamarrfs:
+            condition: service_healthy
+            restart: true
+        network_mode: host
+        volumes:
+            - streamarrfs-plex-config:/config
+            - streamarrfs-plex-transcode:/transcode
+            - /tmp/streamarrfs/streamarrfs:/data:ro
+        environment:
+            PLEX_CLAIM: 'claim-XXXXXXXXXXXXXXXX'
+        logging:
+            driver: json-file
+            options:
+                max-size: 10m
 
-networks:
-  streamarr_net:
+    streamarrfs:
+      image: puttyman/streamarrfs:master
+      network_mode: host
+      environment:
+        - STREAMARR_DB_PATH=/db/streamarr.sqlite
+        - NODE_ENV=development
+        - STREAMARR_FEED_URL_ITEM_2=http://10.0.0.100:9117/api/v2.0/indexers/yts/results/torznab/api?apikey=ryaz13l0u158v140x39zroy72lw1ke8i&t=search&cat=100044&q=2023
+      cap_add:
+        - SYS_ADMIN
+      devices:
+        - /dev/fuse
+      security_opt:
+        - apparmor=unconfined
+      volumes:
+        - streamarrfs-db:/db
+        - streamarrfs-downloads:/downloads
+        - /tmp/streamarrfs:/tmp:shared
+      command: npm run start:prod
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
+        interval: 5s
+        timeout: 5s
+        retries: 3
+        start_period: 30s         
+
+volumes:
+  streamarrfs-plex-config:
+  streamarrfs-plex-transcode:
+  streamarrfs-downloads:
+  streamarrfs-mnt:
+  streamarrfs-db:

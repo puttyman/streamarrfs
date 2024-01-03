@@ -2,13 +2,12 @@ version: '3'
 services:
   streamarrfs:
     build:
-      context: .
-      dockerfile: ./docker/build.Dockerfile
+      context: ../..
+      dockerfile: docker/build.Dockerfile
       target: prod
     ports:
       - 3000:3000
     environment:
-      - STREAMARR_DB_PATH=/db/streamarr.sqlite
       - NODE_ENV=production
     cap_add:
       - SYS_ADMIN
@@ -17,10 +16,10 @@ services:
     security_opt:
       - apparmor=unconfined
     volumes:
-      - ./db:/db
-      - ./downloads:/downloads
+      - ./db:/server/db
+      - ./downloads:/tmp/streamarrfs-downloads
       - ./mnt:/tmp:shared
-    command: npm run start:prod
+    command: npm start
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
       interval: 30s
@@ -28,13 +27,13 @@ services:
       retries: 3
       start_period: 5s
 
-  streamarrtest:
-    build:
-      context: .
-      dockerfile: ./docker/build.Dockerfile
-      target: test
-    cap_add:
-      - SYS_ADMIN
-    devices:
-      - /dev/fuse
-    command: npm run test
+  # streamarrtest:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/build.Dockerfile
+  #     target: test
+  #   cap_add:
+  #     - SYS_ADMIN
+  #   devices:
+  #     - /dev/fuse
+  #   command: npm run test

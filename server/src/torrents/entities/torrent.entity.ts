@@ -37,6 +37,7 @@ export class Torrent {
   public name: string;
 
   @Column({ nullable: true, type: 'text' })
+  @Index()
   magnetURI: string;
 
   @Column({ nullable: true, type: 'text' })

@@ -329,7 +329,7 @@ export class WebTorrentService implements OnApplicationShutdown {
       torrent.status = 'running';
 
       if (!torrent.activeReads) {
-        torrent.activeReads = 0;
+        torrent.activeReads = 1;
       }
 
       torrent.activeReads = torrent.activeReads + 1;

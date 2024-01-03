@@ -182,6 +182,11 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     return JSON.parse(torrent.files);
   }
 
+  async getFilesAsTree(torrent) {
+    const files = JSON.parse(torrent.files);
+    return this.buildTree(files);
+  }
+
   private isPathStartsWithTorrentHash(path) {
     return /^\/[a-f0-9]{40}\/?.*/i.test(path);
   }
@@ -270,7 +275,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       const infoHash = this.getInfoHashFromPath(path);
 
       // Check if the torrent exists
-      if (!(await this.torrentService.findOneByInfoHash(infoHash))) {
+      const torrent = await this.torrentService.findOneByInfoHash(infoHash);
+      if (!torrent) {
         return process.nextTick(cb, Fuse.ENOENT);
       }
 
@@ -381,7 +387,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         const readableTorrent = await this.makeTorrentReadable(infoHash);
 
         if (!readableTorrent) {
-          return process.nextTick(cb, Fuse.ECOMM);
+          // Just return busy error here. The user may retry/resume.
+          return process.nextTick(cb, Fuse.EBUSY);
         }
 
         const torrentFilePath = this.getTorrentFilePathFromPath(path);
@@ -393,6 +400,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         if (pos >= file.length) return process.nextTick(cb, 0); // done
 
         let totalLengthCopied = 0;
+        this.notifyTorrentRead(infoHash);
         for await (const data of file[Symbol.asyncIterator]({
           start: pos,
           end: pos + len,
@@ -405,7 +413,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       }
     } catch (err) {
       this.logger.error(`ERROR read`, path, fd, len, pos);
-      return process.nextTick(cb, Fuse.EFAULT);
+      return process.nextTick(cb, Fuse.EIO); // IO error
     }
   }
 
