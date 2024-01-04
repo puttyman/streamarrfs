@@ -35,10 +35,10 @@ export interface StreamarrFsTorrent extends WebTorrent.Torrent {
 export class WebTorrentService implements OnApplicationShutdown {
   private readonly logger = new Logger(WebTorrentService.name);
   public client: WebTorrent.Instance;
-  private downloadPath;
-  private torrentMaxReady;
-  private torrentPauseAfterMs;
-  private torrentStopAfterMs;
+  private downloadPath: string;
+  private torrentMaxReady: number;
+  private torrentPauseAfterMs: number;
+  private torrentStopAfterMs: number;
 
   constructor(
     private readonly WebTorrentClass: WebTorrentV2,
