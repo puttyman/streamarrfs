@@ -349,6 +349,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         this.webtorrentService.hasReachedMaxConcurrentReadyTorrents() &&
         !this.webtorrentService.isTorrentInClient(infoHash)
       ) {
+        this.logger.log(`Cannot open ${infoHash}. Max ready torrents reached.`);
         return process.nextTick(cb, Fuse.EBUSY);
       }
 
@@ -357,6 +358,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     }
 
     if (!this.isPathStartsWithTorrentHash(path)) {
+      this.logger.log(`Cannot open path=${path}. Not found`);
       return process.nextTick(cb, Fuse.ENOENT);
     }
   }
@@ -381,6 +383,9 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
           !(await this.webtorrentService.isTorrentInClient(infoHash)) &&
           this.webtorrentService.hasReachedMaxConcurrentReadyTorrents()
         ) {
+          this.logger.log(
+            `Cannot read ${infoHash}. Max ready torrents reached.`,
+          );
           return process.nextTick(cb, Fuse.EBUSY);
         }
 
@@ -388,6 +393,9 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
         if (!readableTorrent) {
           // Just return busy error here. The user may retry/resume.
+          this.logger.log(
+            `Cannot read ${infoHash}. Torrent failed to be readable on time.`,
+          );
           return process.nextTick(cb, Fuse.EBUSY);
         }
 
