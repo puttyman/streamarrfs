@@ -4,17 +4,19 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [âš
 
 ## How does it work?
   1. Streamarrfs finds torrents from your favorite torrent indexer. e.g. [Jackett](https://github.com/Jackett/Jackett)
-  2. Find the list of file that is in the torrent.
-  2. Loads info about torrents and including files in its internal database (sqlite).
-  3. Mount and creates a virtual directory through [fuse](https://github.com/libfuse/libfuse) to simulate as if the files from the torrent are present.
-  4. Whenever a read if requested to a given file, Streamarrfs starts the torrent and stream through the portion of the file requested.
+  2. Finds list of files that are in the torrent.
+  2. Stores info about torrents and including files in its internal database (sqlite).
+  3. Mount and creates a virtual directory through [fuse](https://github.com/libfuse/libfuse) to simulate as if the files in the torrents are present locally.
+  4. Whenever a read if requested to a file, Streamarrfs starts the torrent and stream through the portion of the file requested.
 
 ## Features
 - Monitors torrents that are not being streamed and stop them.
 - Automatically paused torrents if no read activity detected.
-- S
+- Polls feed(s) on desired frequency.
+- Ability to seek through video while streaming.
+- File system can be mounted for other usage e.g. nginx as a file server.
 
-## Setup instructions
+## Setup instructions (Plex)
 
 At the present this project only supports running as a docker image and on a amd64 architecture. PR is welcomed for any features. Given this project is at an experimental stage it is recommend to use a seperate plex server instance.
 
@@ -51,7 +53,31 @@ At the present this project only supports running as a docker image and on a amd
   2. Generate a migration `npm run migration:generate db/migrations/db-change`.
 
 
+
+## FAQs and Caveats
+
+#### Is there a web GUI?
+
+Given project is experimental and if successful it will be implemented. PR welcomed.
+
+#### Why stream when I can download?
+
+- Quickly finds content of your liking before needing a download.
+- No storage required. (only cached during streaming).
+
+#### Occassional plex 'Playback error' when tried to play.
+
+You are likely to get this error if:
+- Your connection is not fast enough.
+- The torrent does not have enough peers.
+- The torrent has timedout to be in readable state.
+
+Simply retry playing the video until it works.
+
+
 ## Troubleshooting
+
+### Common errors
 
 - When you force remove the container, you have to sudo fusermount -uz /host/mount/point on the hostsystem!
 
@@ -60,9 +86,6 @@ rm: cannot remove '/tmp/streamarrfs: Device or resource busy
 user@server: sudo fusermount -uz /tmp/streamarrfs
 user@server: rm -rf /tmp/streamarrfs
 ```
-
-
-## Errors
 
 - For running outside of docker.
 
@@ -85,7 +108,7 @@ You need to have libfuse-dev prior to `npm install` as @cocalc/fuse-native does 
 sudo apt-get install -y libfuse-dev
 ```
 
-## Mounted directory is empty
+#### Mounted directory is empty
 
 Add this flag if you want to allow other users to access this fuse mountpoint.
 You need to add user_allow_other flag to /etc/fuse.conf file.
