@@ -58,21 +58,16 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   }
 
   async onApplicationShutdown(signal?: string) {
-    const mountPath = this.getMountPath();
-    this.logger.debug(`onApplicationShutdown signal=${signal}`);
-    Fuse.unmount(this.getMountPath(), (err) => {
-      if (err) {
-        this.logger.error(
-          `ERROR unmounting during shutdown for path ${mountPath}`,
-        );
-      }
-    });
-    await this.wipeMountPath();
+    this.logger.log(`onApplicationShutdown signal=${signal} started`);
+    await this.wipeMountedFs();
+    await this.unmountFs();
+    this.logger.log(`onApplicationShutdown signal=${signal} completed`);
   }
 
   async onModuleInit() {
     const mountPath = this.getMountPath();
-    await this.wipeMountPath();
+    // await this.wipeMountedFs();
+    await this.unmountFs();
     const fuseHooks = ['readdir', 'getattr', 'read', 'open', 'release'].reduce(
       (prev, func) => {
         return {
@@ -99,10 +94,26 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       },
     );
 
-    await this.mount();
+    await this.mountFs();
   }
 
-  private async mount() {
+  private async unmountFs() {
+    const pUnmount = new Promise((resolve, reject) => {
+      Fuse.unmount(this.getMountPath(), (err) => {
+        if (err) reject(err);
+
+        resolve(true);
+      });
+    });
+    try {
+      await pUnmount;
+      this.logger.log(`Unmounted successfully`);
+    } catch (err) {
+      this.logger.error(`ERROR unmounting ${this.getMountPath()}`);
+    }
+  }
+
+  private async mountFs() {
     const mountPath = this.getMountPath();
     const mountTask = new Promise((resolve, reject) => {
       this.fuseInstance.mount((err) => {
@@ -123,7 +134,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     return this.streamarrFsMountPath;
   }
 
-  private async wipeMountPath() {
+  private async wipeMountedFs() {
     const mountPath = this.getMountPath();
     try {
       await rm(mountPath, { recursive: true, force: true });
@@ -219,40 +230,48 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   private async readdir(path: string, cb: FuseCallback): Promise<void> {
     this.logger.verbose(`readdir=${path}`);
-    if (path === '/') {
-      const rootDirInfo = await this.torrentService.visibleTorrentsRootIndex();
-      const hashFolders = rootDirInfo.map((torrent) => torrent.infoHash);
-      return process.nextTick(cb, 0, hashFolders);
-    }
-
-    // In torrent
-    if (this.isPathStartsWithTorrentHash(path)) {
-      const infoHash = this.getInfoHashFromPath(path);
-      const torrentFilesTree = await this.getTorrentTreeForInfoHash(infoHash);
-
-      // If dir is torrent root
-      if (this.isPathTorrentRoot(path)) {
-        return process.nextTick(cb, 0, Object.keys(torrentFilesTree));
+    try {
+      if (path === '/') {
+        const rootDirInfo =
+          await this.torrentService.visibleTorrentsRootIndex();
+        const hashFolders = rootDirInfo.map((torrent) => torrent.infoHash);
+        return process.nextTick(cb, 0, hashFolders);
       }
 
-      // If path is torrent dir
-      if (this.isPathTorrentFile(path)) {
+      // In torrent
+      if (this.isPathStartsWithTorrentHash(path)) {
+        const infoHash = this.getInfoHashFromPath(path);
         const torrentFilesTree = await this.getTorrentTreeForInfoHash(infoHash);
-        const filePathInTorrent = this.getTorrentFilePathFromPath(path);
-        const curDir = this.getDirFromFileTree(
-          torrentFilesTree,
-          filePathInTorrent,
-        );
 
-        // If dir in torrent
-        return process.nextTick(
-          cb,
-          0,
-          curDir ? Object.keys(curDir) : undefined,
-        );
+        // If dir is torrent root
+        if (this.isPathTorrentRoot(path)) {
+          return process.nextTick(cb, 0, Object.keys(torrentFilesTree));
+        }
+
+        // If path is torrent dir
+        if (this.isPathTorrentFile(path)) {
+          const torrentFilesTree =
+            await this.getTorrentTreeForInfoHash(infoHash);
+          const filePathInTorrent = this.getTorrentFilePathFromPath(path);
+          const curDir = this.getDirFromFileTree(
+            torrentFilesTree,
+            filePathInTorrent,
+          );
+
+          // If dir in torrent
+          return process.nextTick(
+            cb,
+            0,
+            curDir ? Object.keys(curDir) : undefined,
+          );
+        }
+
+        return process.nextTick(cb, Fuse.ENOENT);
       }
-
-      return process.nextTick(cb, Fuse.ENOENT);
+    } catch (err) {
+      this.logger.error(`Error 'readdir'`, path);
+      this.logger.error(err);
+      return process.nextTick(cb, Fuse.EIO);
     }
 
     return process.nextTick(cb, 0);
@@ -260,76 +279,84 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   private async getattr(path: string, cb: FuseCallback): Promise<void> {
     this.logger.verbose('getattr', path);
-    if (path === '/') {
-      const dirSize = (await this.torrentService.visibleTorrentsRootIndex())
-        .length;
-      return process.nextTick(
-        cb,
-        null,
-        this.stat({ mode: 'dir', size: dirSize }),
-      );
-    }
-
-    // If a path to a torrent
-    if (this.isPathStartsWithTorrentHash(path)) {
-      const infoHash = this.getInfoHashFromPath(path);
-
-      // Check if the torrent exists
-      const torrent = await this.torrentService.findOneByInfoHash(infoHash);
-      if (!torrent) {
-        return process.nextTick(cb, Fuse.ENOENT);
-      }
-
-      // If dir is torrent root
-      if (this.isPathTorrentRoot(path)) {
-        const torrentFilesTree = await this.getTorrentTreeForInfoHash(infoHash);
+    try {
+      if (path === '/') {
+        const dirSize = (await this.torrentService.visibleTorrentsRootIndex())
+          .length;
         return process.nextTick(
           cb,
           null,
-          this.stat({
-            mode: 'dir',
-            size: Object.keys(torrentFilesTree).length,
-          }),
+          this.stat({ mode: 'dir', size: dirSize }),
         );
       }
 
-      // If path is torrent file/dir
-      if (this.isPathTorrentFile(path)) {
-        const filePathInTorrent = this.getTorrentFilePathFromPath(path);
-        const torrentFiles = await this.getTorrentFilesForInfoHash(infoHash);
-        const fileInTorrent = torrentFiles.find(
-          (torrent) => torrent.path === filePathInTorrent,
-        );
+      // If a path to a torrent
+      if (this.isPathStartsWithTorrentHash(path)) {
+        const infoHash = this.getInfoHashFromPath(path);
 
-        if (fileInTorrent) {
-          return process.nextTick(
-            cb,
-            null,
-            this.stat({
-              mode: 'file',
-              size: fileInTorrent.length,
-            }),
-          );
+        // Check if the torrent exists
+        const torrent = await this.torrentService.findOneByInfoHash(infoHash);
+        if (!torrent) {
+          return process.nextTick(cb, Fuse.ENOENT);
         }
 
-        // Check if path is dir
-        const torrentFilesTree = await this.getTorrentTreeForInfoHash(infoHash);
-        const curDir = this.getDirFromFileTree(
-          torrentFilesTree,
-          filePathInTorrent,
-        );
-
-        if (curDir) {
+        // If dir is torrent root
+        if (this.isPathTorrentRoot(path)) {
+          const torrentFilesTree =
+            await this.getTorrentTreeForInfoHash(infoHash);
           return process.nextTick(
             cb,
             null,
             this.stat({
               mode: 'dir',
-              size: Object.keys(curDir).length,
+              size: Object.keys(torrentFilesTree).length,
             }),
           );
         }
+
+        // If path is torrent file/dir
+        if (this.isPathTorrentFile(path)) {
+          const filePathInTorrent = this.getTorrentFilePathFromPath(path);
+          const torrentFiles = await this.getTorrentFilesForInfoHash(infoHash);
+          const fileInTorrent = torrentFiles.find(
+            (torrent) => torrent.path === filePathInTorrent,
+          );
+
+          if (fileInTorrent) {
+            return process.nextTick(
+              cb,
+              null,
+              this.stat({
+                mode: 'file',
+                size: fileInTorrent.length,
+              }),
+            );
+          }
+
+          // Check if path is dir
+          const torrentFilesTree =
+            await this.getTorrentTreeForInfoHash(infoHash);
+          const curDir = this.getDirFromFileTree(
+            torrentFilesTree,
+            filePathInTorrent,
+          );
+
+          if (curDir) {
+            return process.nextTick(
+              cb,
+              null,
+              this.stat({
+                mode: 'dir',
+                size: Object.keys(curDir).length,
+              }),
+            );
+          }
+        }
       }
+    } catch (err) {
+      this.logger.error(`Error 'getattr'`, path);
+      this.logger.error(err);
+      return process.nextTick(cb, Fuse.EIO);
     }
 
     return process.nextTick(cb, Fuse.ENOENT);
@@ -338,37 +365,55 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   private async open(path: string, flags: number, cb: FuseCallback) {
     this.logger.verbose('open', path, flags);
 
-    if (this.isPathStartsWithTorrentHash(path)) {
-      const infoHash = this.getInfoHashFromPath(path);
+    try {
+      if (this.isPathStartsWithTorrentHash(path)) {
+        const infoHash = this.getInfoHashFromPath(path);
 
-      if (!(await this.torrentService.findOneByInfoHash(infoHash))) {
+        if (!(await this.torrentService.findOneByInfoHash(infoHash))) {
+          return process.nextTick(cb, Fuse.ENOENT);
+        }
+
+        if (
+          this.webtorrentService.hasReachedMaxConcurrentReadyTorrents() &&
+          !this.webtorrentService.isTorrentInClient(infoHash)
+        ) {
+          this.logger.log(
+            `Cannot open ${infoHash}. Max ready torrents reached.`,
+          );
+          return process.nextTick(cb, Fuse.EBUSY);
+        }
+
+        await this.notifyTorrentOpen(infoHash);
+        return process.nextTick(cb, 0);
+      }
+
+      if (!this.isPathStartsWithTorrentHash(path)) {
+        this.logger.error(`Cannot open path=${path}. Not found`);
         return process.nextTick(cb, Fuse.ENOENT);
       }
-
-      if (
-        this.webtorrentService.hasReachedMaxConcurrentReadyTorrents() &&
-        !this.webtorrentService.isTorrentInClient(infoHash)
-      ) {
-        this.logger.log(`Cannot open ${infoHash}. Max ready torrents reached.`);
-        return process.nextTick(cb, Fuse.EBUSY);
-      }
-
-      await this.notifyTorrentOpen(infoHash);
-      return process.nextTick(cb, 0);
+    } catch (err) {
+      this.logger.error(`Error 'open'`, path);
+      this.logger.error(err);
+      return process.nextTick(cb, Fuse.EIO);
     }
 
-    if (!this.isPathStartsWithTorrentHash(path)) {
-      this.logger.log(`Cannot open path=${path}. Not found`);
-      return process.nextTick(cb, Fuse.ENOENT);
-    }
+    return process.nextTick(cb, Fuse.EIO);
   }
 
   private async release(path, fd, cb) {
     this.logger.verbose('realease', path, fd);
-    if (this.isPathStartsWithTorrentHash(path)) {
-      const infoHash = this.getInfoHashFromPath(path);
-      await this.notifyTorrentRelease(infoHash);
-      return process.nextTick(cb, 0);
+    try {
+      if (this.isPathStartsWithTorrentHash(path)) {
+        const infoHash = this.getInfoHashFromPath(path);
+        await this.notifyTorrentRelease(infoHash);
+        return process.nextTick(cb, 0);
+      }
+
+      return process.nextTick(cb, Fuse.ENOENT);
+    } catch (err) {
+      this.logger.error(`Error 'realease'`, path);
+      this.logger.error(err);
+      return process.nextTick(cb, Fuse.EIO);
     }
   }
 

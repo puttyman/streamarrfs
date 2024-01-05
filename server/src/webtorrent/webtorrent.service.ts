@@ -423,10 +423,23 @@ export class WebTorrentService implements OnApplicationShutdown {
     }
   }
 
-  public onApplicationShutdown(signal?: string) {
-    this.logger.verbose(`onApplicationShutdown signal=${signal}`);
-    this.client.destroy((err) => {
-      if (err) this.logger.error('error destroying webtorrent client');
+  async onApplicationShutdown(signal?: string) {
+    this.logger.verbose(`onApplicationShutdown signal=${signal} started`);
+    const pDestroy = new Promise((resolve, reject) => {
+      this.client.destroy((err) => {
+        if (err) reject(err);
+
+        resolve(true);
+      });
     });
+    try {
+      await pDestroy;
+    } catch (err) {
+      if (err) {
+        this.logger.error('error destroying webtorrent client');
+        this.logger.error(err);
+      }
+    }
+    this.logger.verbose(`onApplicationShutdown signal=${signal} completed`);
   }
 }

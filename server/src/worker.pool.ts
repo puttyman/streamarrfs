@@ -1,11 +1,12 @@
 import { resolve } from 'path';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import Piscina from 'piscina';
 import type { TorrentInfo } from './types';
-import { toMagnetURI } from 'parse-torrent';
 
 @Injectable()
-export class WorkerPool {
+export class WorkerPool implements OnApplicationShutdown {
+  private readonly logger = new Logger(WorkerPool.name);
+
   private pool: Piscina;
   constructor() {
     this.pool = new Piscina({
@@ -14,6 +15,17 @@ export class WorkerPool {
       minThreads: 1,
       concurrentTasksPerWorker: 1,
     });
+  }
+  async onApplicationShutdown(signal?: string) {
+    this.logger.log(`onApplicationShutdown signal=${signal} started`);
+    try {
+      await this.pool.destroy();
+      this.logger.log(`SUCCESS destroying worker pool`);
+    } catch (err) {
+      this.logger.error(`ERROR destroying worker pool`);
+      this.logger.error(err);
+    }
+    this.logger.log(`onApplicationShutdown signal=${signal} completed`);
   }
 
   public async getTorrentInfoFromFeedUrl(
