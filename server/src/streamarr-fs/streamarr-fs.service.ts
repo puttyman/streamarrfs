@@ -59,14 +59,14 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   async onApplicationShutdown(signal?: string) {
     this.logger.log(`onApplicationShutdown signal=${signal} started`);
-    await this.wipeMountedFs();
+    await this.wipeAndRecreateMountedPath();
     await this.unmountFs();
     this.logger.log(`onApplicationShutdown signal=${signal} completed`);
   }
 
   async onModuleInit() {
     const mountPath = this.getMountPath();
-    // await this.wipeMountedFs();
+    await this.wipeAndRecreateMountedPath();
     await this.unmountFs();
     const fuseHooks = ['readdir', 'getattr', 'read', 'open', 'release'].reduce(
       (prev, func) => {
@@ -134,7 +134,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     return this.streamarrFsMountPath;
   }
 
-  private async wipeMountedFs() {
+  private async wipeAndRecreateMountedPath() {
     const mountPath = this.getMountPath();
     try {
       await rm(mountPath, { recursive: true, force: true });
