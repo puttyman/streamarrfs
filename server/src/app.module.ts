@@ -18,6 +18,7 @@ import {
 import { TorrentsFromFeedService } from './producers/torrents-from-feed.service';
 import { TorrentFromQueueService } from './producers/torrents-from-queue.service';
 import { TorrentsFreeService } from './producers/torrents-free.service';
+import { dataSourceOptions } from 'db/data-source';
 
 @Module({
   imports: [
@@ -41,13 +42,7 @@ import { TorrentsFreeService } from './producers/torrents-free.service';
       // disable throwing uncaughtException if an error event is emitted and it has no listeners
       ignoreErrors: false,
     }),
-    TypeOrmModule.forRoot({
-      type: 'better-sqlite3',
-      database: config().STREAMARR_DB_PATH,
-      entities: ['dist/**/*.entity.js'],
-      // TODO: Implement db migrations
-      synchronize: process.env.NODE_ENV !== 'production',
-    }),
+    TypeOrmModule.forRoot(dataSourceOptions),
     TorrentsModule,
   ],
   controllers: [AppController, StreamarrController],

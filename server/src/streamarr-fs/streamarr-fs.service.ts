@@ -182,6 +182,11 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     return JSON.parse(torrent.files);
   }
 
+  async getFilesAsTree(torrent) {
+    const files = JSON.parse(torrent.files);
+    return this.buildTree(files);
+  }
+
   private isPathStartsWithTorrentHash(path) {
     return /^\/[a-f0-9]{40}\/?.*/i.test(path);
   }
@@ -213,7 +218,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   }
 
   private async readdir(path: string, cb: FuseCallback): Promise<void> {
-    this.logger.debug(`readdir=${path}`);
+    this.logger.verbose(`readdir=${path}`);
     if (path === '/') {
       const rootDirInfo = await this.torrentService.visibleTorrentsRootIndex();
       const hashFolders = rootDirInfo.map((torrent) => torrent.infoHash);
@@ -254,7 +259,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   }
 
   private async getattr(path: string, cb: FuseCallback): Promise<void> {
-    this.logger.debug('getattr', path);
+    this.logger.verbose('getattr', path);
     if (path === '/') {
       const dirSize = (await this.torrentService.visibleTorrentsRootIndex())
         .length;
@@ -270,7 +275,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       const infoHash = this.getInfoHashFromPath(path);
 
       // Check if the torrent exists
-      if (!(await this.torrentService.findOneByInfoHash(infoHash))) {
+      const torrent = await this.torrentService.findOneByInfoHash(infoHash);
+      if (!torrent) {
         return process.nextTick(cb, Fuse.ENOENT);
       }
 
@@ -330,7 +336,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   }
 
   private async open(path: string, flags: number, cb: FuseCallback) {
-    this.logger.debug('open', path, flags);
+    this.logger.verbose('open', path, flags);
 
     if (this.isPathStartsWithTorrentHash(path)) {
       const infoHash = this.getInfoHashFromPath(path);
@@ -343,6 +349,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         this.webtorrentService.hasReachedMaxConcurrentReadyTorrents() &&
         !this.webtorrentService.isTorrentInClient(infoHash)
       ) {
+        this.logger.log(`Cannot open ${infoHash}. Max ready torrents reached.`);
         return process.nextTick(cb, Fuse.EBUSY);
       }
 
@@ -351,12 +358,13 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     }
 
     if (!this.isPathStartsWithTorrentHash(path)) {
+      this.logger.log(`Cannot open path=${path}. Not found`);
       return process.nextTick(cb, Fuse.ENOENT);
     }
   }
 
   private async release(path, fd, cb) {
-    this.logger.debug('realease', path, fd);
+    this.logger.verbose('realease', path, fd);
     if (this.isPathStartsWithTorrentHash(path)) {
       const infoHash = this.getInfoHashFromPath(path);
       await this.notifyTorrentRelease(infoHash);
@@ -366,7 +374,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   private async read(path, fd, buf, len, pos, cb) {
     try {
-      // this.logger.debug('read', path, len, pos);
+      this.logger.verbose('read', path, len, pos);
       if (this.isPathStartsWithTorrentHash(path)) {
         const infoHash = this.getInfoHashFromPath(path);
 
@@ -375,13 +383,20 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
           !(await this.webtorrentService.isTorrentInClient(infoHash)) &&
           this.webtorrentService.hasReachedMaxConcurrentReadyTorrents()
         ) {
+          this.logger.log(
+            `Cannot read ${infoHash}. Max ready torrents reached.`,
+          );
           return process.nextTick(cb, Fuse.EBUSY);
         }
 
         const readableTorrent = await this.makeTorrentReadable(infoHash);
 
         if (!readableTorrent) {
-          return process.nextTick(cb, Fuse.ECOMM);
+          // Just return busy error here. The user may retry/resume.
+          this.logger.log(
+            `Cannot read ${infoHash}. Torrent failed to be readable on time.`,
+          );
+          return process.nextTick(cb, Fuse.EBUSY);
         }
 
         const torrentFilePath = this.getTorrentFilePathFromPath(path);
@@ -393,6 +408,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         if (pos >= file.length) return process.nextTick(cb, 0); // done
 
         let totalLengthCopied = 0;
+        this.notifyTorrentRead(infoHash);
         for await (const data of file[Symbol.asyncIterator]({
           start: pos,
           end: pos + len,
@@ -405,7 +421,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       }
     } catch (err) {
       this.logger.error(`ERROR read`, path, fd, len, pos);
-      return process.nextTick(cb, Fuse.EFAULT);
+      return process.nextTick(cb, Fuse.EIO); // IO error
     }
   }
 
@@ -452,7 +468,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       const torrentInClient =
         await this.webtorrentService.getTorrentWithInfoHash(infoHash);
       if (!torrentInClient) {
-        this.logger.debug(
+        this.logger.log(
           `torrent ${infoHash} not in client starting new torrent.`,
         );
         const startedTorrent =
@@ -463,7 +479,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       }
 
       if (torrentInClient && !torrentInClient.ready) {
-        this.logger.debug(
+        this.logger.log(
           `torrent ${infoHash} is in client waiting for to be readable.`,
         );
 

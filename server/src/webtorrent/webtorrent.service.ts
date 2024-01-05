@@ -35,10 +35,10 @@ export interface StreamarrFsTorrent extends WebTorrent.Torrent {
 export class WebTorrentService implements OnApplicationShutdown {
   private readonly logger = new Logger(WebTorrentService.name);
   public client: WebTorrent.Instance;
-  private downloadPath;
-  private torrentMaxReady;
-  private torrentPauseAfterMs;
-  private torrentStopAfterMs;
+  private downloadPath: string;
+  private torrentMaxReady: number;
+  private torrentPauseAfterMs: number;
+  private torrentStopAfterMs: number;
 
   constructor(
     private readonly WebTorrentClass: WebTorrentV2,
@@ -115,7 +115,7 @@ export class WebTorrentService implements OnApplicationShutdown {
         magnetURI,
         { path: this.downloadPath, skipVerify: false },
         (torrent) => {
-          this.logger.log(`torrent name=${torrent.name} started`);
+          this.logger.log(`torrent ${torrent.infoHash} started`);
           resolve(torrent);
         },
       );
@@ -224,23 +224,23 @@ export class WebTorrentService implements OnApplicationShutdown {
     const torrent = await this.getTorrentWithInfoHash(infoHash);
 
     if (torrent && torrent.ready === true && torrent.paused === true) {
-      this.logger.debug(`torrent ${infoHash} running already but is paused`);
+      this.logger.log(`torrent ${infoHash} running already but is paused`);
       return torrent;
     }
 
     if (!torrent) {
-      this.logger.debug(`torrent ${infoHash} not running attempting to start`);
+      this.logger.log(`torrent ${infoHash} not running attempting to start`);
       try {
-        this.logger.debug(`torrent ${infoHash} starting...`);
+        this.logger.log(`torrent ${infoHash} starting...`);
         const startedTorrent = await pTimeout(
           this.startTorrentWithMagnetLink(magnetURI),
           timeout,
         );
 
-        this.logger.debug(`torrent ${startedTorrent.infoHash} started`);
+        this.logger.log(`torrent ${startedTorrent.infoHash} started`);
       } catch (e) {
         if (e instanceof TimeoutError) {
-          this.logger.debug(`torrent ${infoHash} start ready timeout`);
+          this.logger.log(`torrent ${infoHash} start ready timeout`);
           await this.stopTorrentWithInfoHash(infoHash);
         } else {
           throw e;
@@ -329,7 +329,7 @@ export class WebTorrentService implements OnApplicationShutdown {
       torrent.status = 'running';
 
       if (!torrent.activeReads) {
-        torrent.activeReads = 0;
+        torrent.activeReads = 1;
       }
 
       torrent.activeReads = torrent.activeReads + 1;
@@ -361,6 +361,7 @@ export class WebTorrentService implements OnApplicationShutdown {
     name: `${WebTorrentService.name} - updateTorrentStatus`,
   })
   async updateTorrentStatus() {
+    this.logger.verbose('running updateTorrentStatus');
     const now = Date.now();
     for (const torrent of this.client.torrents) {
       const streamarrfsTorrent = torrent as StreamarrFsTorrent;
@@ -370,7 +371,7 @@ export class WebTorrentService implements OnApplicationShutdown {
         now - streamarrfsTorrent.lastReadDate >= this.torrentPauseAfterMs
       ) {
         streamarrfsTorrent.status = 'pausing';
-        this.logger.debug(
+        this.logger.verbose(
           `updateTorrentStatus changed ${streamarrfsTorrent.infoHash} to pausing`,
         );
       }
@@ -381,7 +382,7 @@ export class WebTorrentService implements OnApplicationShutdown {
         now - streamarrfsTorrent.lastReadDate >= this.torrentStopAfterMs
       ) {
         streamarrfsTorrent.status = 'stopping';
-        this.logger.debug(
+        this.logger.verbose(
           `updateTorrentStatus changed ${streamarrfsTorrent.infoHash} to stopping`,
         );
       }
@@ -391,23 +392,22 @@ export class WebTorrentService implements OnApplicationShutdown {
         now - streamarrfsTorrent.lastReadDate < this.torrentPauseAfterMs
       ) {
         streamarrfsTorrent.status = 'running';
-        this.logger.debug(
+        this.logger.verbose(
           `updateTorrentStatus changed ${streamarrfsTorrent.infoHash} to running`,
         );
       }
     }
-
-    this.logger.debug('updateTorrentStatus');
   }
 
   @Cron(CronExpression.EVERY_5_SECONDS, {
     name: `${WebTorrentService.name} - pauseOrStopTorrents`,
   })
   async pauseOrStopTorrents() {
+    this.logger.verbose('running pauseOrStopTorrents');
     for (const torrent of this.client.torrents) {
       const streamarrfsTorrent = torrent as StreamarrFsTorrent;
       if (streamarrfsTorrent.status === 'pausing') {
-        this.logger.debug(
+        this.logger.verbose(
           `pauseOrStopTorrents pausing ${streamarrfsTorrent.infoHash}`,
         );
         streamarrfsTorrent.pause();
@@ -415,7 +415,7 @@ export class WebTorrentService implements OnApplicationShutdown {
       }
 
       if (streamarrfsTorrent.status === 'stopping') {
-        this.logger.debug(
+        this.logger.verbose(
           `pauseOrStopTorrents stopping ${streamarrfsTorrent.infoHash}`,
         );
         await this.stopTorrentWithInfoHash(streamarrfsTorrent.infoHash);
@@ -424,7 +424,7 @@ export class WebTorrentService implements OnApplicationShutdown {
   }
 
   public onApplicationShutdown(signal?: string) {
-    this.logger.debug(`onApplicationShutdown signal=${signal}`);
+    this.logger.verbose(`onApplicationShutdown signal=${signal}`);
     this.client.destroy((err) => {
       if (err) this.logger.error('error destroying webtorrent client');
     });
