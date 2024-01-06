@@ -22,9 +22,8 @@ services:
       image: puttyman/streamarrfs:master
       network_mode: host
       environment:
-        - STREAMARR_DB_PATH=/db/streamarr.sqlite
         - NODE_ENV=development
-        - STREAMARR_FEED_URL_ITEM_2=http://10.0.0.100:9117/api/v2.0/indexers/yts/results/torznab/api?apikey=ryaz13l0u158v140x39zroy72lw1ke8i&t=search&cat=100044&q=2023
+        - STREAMARRFS_FEED_URL_ITEM_2=http://10.0.0.100:9117/api/v2.0/indexers/yts/results/torznab/api?apikey=ryaz13l0u158v140x39zroy72lw1ke8i&t=search&cat=100044&q=2023
       cap_add:
         - SYS_ADMIN
       devices:

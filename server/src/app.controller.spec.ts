@@ -20,12 +20,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('/status should return OK', () => {
-      expect(appController.getHello()).toBe('OK');
-    });
-
-    it('/api/torrents return a list of torrents', () => {
-      jest.spyOn(webtorrentService, 'torrents').mockImplementation(() => []);
-      expect(appController.torrents()).toBe('[]');
+      expect(appController.healthcheck()).toBe('OK');
     });
   });
 });

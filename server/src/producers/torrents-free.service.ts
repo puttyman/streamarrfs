@@ -27,7 +27,7 @@ export class TorrentsFreeService implements OnModuleInit {
 
   async onModuleInit() {
     const shouldAddFreeTorrents = this.configService.get<boolean>(
-      'STREAMARR_ADD_FREE_TORRENTS',
+      'STREAMARRFS_ADD_FREE_TORRENTS',
     );
     if (!shouldAddFreeTorrents) {
       this.logger.verbose(`Skipping adding free torrents`);

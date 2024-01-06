@@ -17,8 +17,8 @@ services:
       - apparmor=unconfined
     volumes:
       - ./db:/server/db
-      - ./downloads:/tmp/streamarrfs-downloads
-      - ./mnt:/tmp:shared
+      - ./tmp/streamarrfs-downloads:/tmp/streamarrfs-downloads
+      - ./tmp/streamarrfs-mnt:/tmp/streamarrfs-mnt:shared
     command: npm start
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
@@ -27,13 +27,13 @@ services:
       retries: 3
       start_period: 5s
 
-  # streamarrtest:
-  #   build:
-  #     context: .
-  #     dockerfile: ./docker/build.Dockerfile
-  #     target: test
-  #   cap_add:
-  #     - SYS_ADMIN
-  #   devices:
-  #     - /dev/fuse
-  #   command: npm run test
+  streamarrfs-test:
+    build:
+      context: ../..
+      dockerfile: docker/build.Dockerfile
+      target: test
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    command: npm run test

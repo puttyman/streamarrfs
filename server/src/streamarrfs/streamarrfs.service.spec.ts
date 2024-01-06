@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { WebTorrentService } from '../webtorrent/webtorrent.service';
 import { TorrentsService } from '../torrents/torrents.service';
-import { StreamarrFsService } from './streamarr-fs.service';
+import { StreamarrFsService } from './streamarrfs.service';
 import { TypeOrmSQLITETestingModule } from '../test-utils/TypeORMSQLITETestingModule';
 import { TorrentUtil } from '../torrent-util/torrent.util';
 
@@ -30,6 +30,9 @@ const setupTestData = async (torrentService: TorrentsService) => {
       },
     ]),
     magnetURI: 'magnet://torrent1',
+    feedGuid: 'torrent1',
+    feedURL: 'http://torrent1',
+    isVisible: false,
   });
 
   await torrentService.create({
@@ -43,6 +46,9 @@ const setupTestData = async (torrentService: TorrentsService) => {
       },
     ]),
     magnetURI: 'magnet://singlefile',
+    feedGuid: 'singlefile',
+    feedURL: 'http://singlefile',
+    isVisible: false,
   });
 };
 

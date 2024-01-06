@@ -22,7 +22,7 @@ export class TorrentsFromFeedService implements OnModuleInit {
       },
     });
     this.feedUrls = this.configService.get<Array<string>>(
-      'STREAMARR_FEED_URLS',
+      'STREAMARRFS_FEED_URLS',
     );
   }
 
@@ -32,7 +32,9 @@ export class TorrentsFromFeedService implements OnModuleInit {
 
   @Cron(CronExpression.EVERY_HOUR, { name: TorrentsFromFeedService.name })
   async torrentProducer() {
-    if (this.configService.get<string>('STREAMARR_FEED_DISABLED') === 'true') {
+    if (
+      this.configService.get<string>('STREAMARRFS_FEED_DISABLED') === 'true'
+    ) {
       this.logger.verbose(`aborting feed is disabled`);
       return;
     }

@@ -9,7 +9,7 @@ import { AppService } from './app.service';
 import { TorrentsModule } from './torrents/torrents.module';
 import { StreamarrController } from './streamarr/streamarr.controller';
 import { StreamarrService } from './streamarr/streamarr.service';
-import { StreamarrFsService } from './streamarr-fs/streamarr-fs.service';
+import { StreamarrFsService } from './streamarrfs/streamarrfs.service';
 import { WorkerPool } from './worker.pool';
 import {
   useWebtorrentServiceProvider,
@@ -53,7 +53,7 @@ import { dataSourceOptions } from 'db/data-source';
     TorrentsFromFeedService,
     StreamarrFsService,
     WorkerPool,
-    useWebtorrentServiceProvider(config().STREAMARR_WEBTORRENT_TORRENT_PORT),
+    useWebtorrentServiceProvider(config().STREAMARRFS_WEBTORRENT_TORRENT_PORT),
     TorrentFromQueueService,
     TorrentsFreeService,
   ],

@@ -47,25 +47,25 @@ export class WebTorrentService implements OnApplicationShutdown {
     private readonly torrentPort: number,
   ) {
     this.downloadPath = configService.get<string>(
-      'STREAMARR_WEBTORRENT_DOWNLOAD_PATH',
+      'STREAMARRFS_WEBTORRENT_DOWNLOAD_PATH',
     );
     const maxConns = this.configService.get<number>(
-      'STREAMARR_WEBTORRENT_MAX_CONNS',
+      'STREAMARRFS_WEBTORRENT_MAX_CONNS',
     );
     const downloadLimit = this.configService.get<number>(
-      'STREAMARR_WEBTORRENT_DOWNLOAD_LIMIT',
+      'STREAMARRFS_WEBTORRENT_DOWNLOAD_LIMIT',
     );
     const uploadLimit = this.configService.get<number>(
-      'STREAMARR_WEBTORRENT_UPLOAD_LIMIT',
+      'STREAMARRFS_WEBTORRENT_UPLOAD_LIMIT',
     );
     this.torrentMaxReady = this.configService.get<number>(
-      'STREAMARR_TORRENT_MAX_READY',
+      'STREAMARRFS_TORRENT_MAX_READY',
     );
     this.torrentPauseAfterMs = this.configService.get<number>(
-      'STREAMARR_TORRENT_PAUSE_AFTER_MS',
+      'STREAMARRFS_TORRENT_PAUSE_AFTER_MS',
     );
     this.torrentStopAfterMs = this.configService.get<number>(
-      'STREAMARR_TORRENT_STOP_AFTER_MS',
+      'STREAMARRFS_TORRENT_STOP_AFTER_MS',
     );
     this.client = new WebTorrentClass({
       maxConns,

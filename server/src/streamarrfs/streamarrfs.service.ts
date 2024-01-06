@@ -50,7 +50,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     private readonly eventEmitter: EventEmitter2,
   ) {
     this.torrentStartTimeout = this.configService.get<number>(
-      'STREAMARR_TORRENT_START_TIMEOUT',
+      'STREAMARRFS_TORRENT_START_TIMEOUT',
     );
     this.streamarrFsMountPath = this.configService.get<string>(
       'STREAMARRFS_MOUNT_PATH',
@@ -84,13 +84,21 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         ...fuseHooks,
       },
       {
-        autoUnmount: true,
-        debug: process.env.NODE_ENV !== 'production',
-        timeout: 1000 * 100,
-        // nonEmpty: true,
-        allowOther: true,
-        // allowRoot: true,
-        maxRead: 1024 * 1000, // 1MB
+        autoUnmount: this.configService.get<boolean>(
+          'STREAMARRFS_FUSE_AUTO_UNMOUNT',
+        ),
+        debug: this.configService.get<boolean>('STREAMARRFS_FUSE_DEBUG'),
+        timeout: this.configService.get<number>('STREAMARRFS_FUSE_TIMEOUT'),
+        nonEmpty: this.configService.get<boolean>('STREAMARRFS_FUSE_NON_EMPTY'),
+        allowOther: this.configService.get<boolean>(
+          'STREAMARRFS_FUSE_ALLOW_OTHER',
+        ),
+        allowRoot: this.configService.get<boolean>(
+          'STREAMARRFS_FUSE_ALLOW_ROOT',
+        ),
+        maxRead: this.configService.get<number>(
+          'STREAMARRFS_FUSE_ALLOW_MAX_READ',
+        ),
       },
     );
 
@@ -138,7 +146,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     const mountPath = this.getMountPath();
     try {
       await rm(mountPath, { recursive: true, force: true });
-      await mkdir(mountPath);
+      await mkdir(mountPath, { recursive: true });
     } catch (err) {
       this.logger.error(err, `ERROR wiping mountpath=${mountPath}`);
     }
