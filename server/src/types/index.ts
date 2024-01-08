@@ -14,3 +14,21 @@ export type TorrentInfo = {
 export type StreamarrFsFileEvent = {
   infoHash: string;
 };
+
+export enum FeedIndexer {
+  JACKETT,
+  PROWLARR,
+}
+
+export enum FeedType {
+  RSS,
+  JSON,
+  TORZNAB,
+}
+
+export type Feed = {
+  name: string;
+  url: string;
+  type: FeedType;
+  indexer: FeedIndexer;
+};

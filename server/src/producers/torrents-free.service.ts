@@ -1,11 +1,16 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TorrentsService } from '../torrents/torrents.service';
 import { WorkerPool } from '../worker.pool';
 import { TorrentInfoStatus } from 'src/torrents/entities/torrent.entity';
 
 @Injectable()
-export class TorrentsFreeService implements OnModuleInit {
+export class TorrentsFreeService implements OnApplicationBootstrap {
   private readonly logger = new Logger(TorrentsFreeService.name);
 
   private readonly freeMagnetLinks = {
@@ -25,7 +30,7 @@ export class TorrentsFreeService implements OnModuleInit {
     private readonly workerPool: WorkerPool,
   ) {}
 
-  async onModuleInit() {
+  async onApplicationBootstrap() {
     const shouldAddFreeTorrents = this.configService.get<boolean>(
       'STREAMARRFS_ADD_FREE_TORRENTS',
     );

@@ -1,16 +1,17 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import RssParser from 'rss-parser';
 
 import { TorrentsService } from '../torrents/torrents.service';
+import { FeedType, type Feed } from '../types';
 
 @Injectable()
-export class TorrentsFromFeedService implements OnModuleInit {
+export class TorrentsFromFeedService implements OnApplicationBootstrap {
   private readonly logger = new Logger(TorrentsFromFeedService.name);
   private isTaskRunning: boolean;
   private rssParser;
-  private feedUrls;
+  private feeds;
 
   constructor(
     private readonly torrentService: TorrentsService,
@@ -21,12 +22,10 @@ export class TorrentsFromFeedService implements OnModuleInit {
         item: [['torznab:attr', 'torznabAttr']],
       },
     });
-    this.feedUrls = this.configService.get<Array<string>>(
-      'STREAMARRFS_FEED_URLS',
-    );
+    this.feeds = this.configService.get<Array<Feed>>('STREAMARRFS_FEEDS');
   }
 
-  async onModuleInit() {
+  async onApplicationBootstrap() {
     await this.torrentProducer();
   }
 
@@ -47,28 +46,39 @@ export class TorrentsFromFeedService implements OnModuleInit {
     try {
       this.isTaskRunning = true;
       this.logger.log(`fetching torrents from feed`);
-      for (const feedUrl of this.feedUrls) {
-        const feedContents = await this.rssParser.parseURL(feedUrl);
-        this.logger.log(
-          `received ${feedContents.items.length ?? 'no'} items from feed`,
-        );
-        for (const { guid: feedGuid, link: feedURL } of feedContents.items) {
-          if (!feedGuid || !feedURL) continue;
-          const existingTorrent =
-            await this.torrentService.findOneByFeedGuid(feedGuid);
-          if (!existingTorrent) {
-            await this.torrentService.create({
-              feedGuid,
-              feedURL,
-              isVisible: false,
-            });
-          }
+      for (const feed of this.feeds) {
+        if (feed.type === FeedType.RSS) {
+          await this.handleRssFeed(feed);
+          continue;
         }
+        this.logger.warn(`Unsupported feed type=${feed.type}`);
       }
     } catch (err) {
-      this.logger.error({ err }, `error running feed cron`);
+      this.logger.error(`ERROR running feed cron`);
+      this.logger.error(err);
     }
 
     this.isTaskRunning = false;
+  }
+
+  async handleRssFeed(feed: Feed) {
+    const feedContents = await this.rssParser.parseURL(feed.url);
+    this.logger.log(
+      `received ${feedContents.items.length ?? 'no'} items from feed=${
+        feed.name
+      }`,
+    );
+    for (const { guid: feedGuid, link: feedURL } of feedContents.items) {
+      if (!feedGuid || !feedURL) continue;
+      const existingTorrent =
+        await this.torrentService.findOneByFeedGuid(feedGuid);
+      if (!existingTorrent) {
+        await this.torrentService.create({
+          feedGuid,
+          feedURL,
+          isVisible: false,
+        });
+      }
+    }
   }
 }

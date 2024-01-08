@@ -147,7 +147,7 @@ export class WebTorrentService implements OnApplicationShutdown {
     return file;
   }
 
-  async getTorrentInfoFromMagnetURI(magnetURI): Promise<TorrentInfo | null> {
+  async getTorrentInfoFromMagnetURI(magnetURI): Promise<TorrentInfo> {
     const startTorrentTask = new Promise<WebTorrent.Torrent>((resolve) => {
       this.client.add(
         magnetURI,
@@ -161,7 +161,7 @@ export class WebTorrentService implements OnApplicationShutdown {
     try {
       const { infoHash, name, magnetURI, files } = await pTimeout(
         startTorrentTask,
-        1000 * 30,
+        this.configService.get<number>('STREAMARRFS_TORRENT_START_TIMEOUT'),
       );
       const torrentInfo = {
         ...{},
@@ -177,17 +177,23 @@ export class WebTorrentService implements OnApplicationShutdown {
         }),
       };
       await this.destroyTorrent(infoHash);
+      // throw new Error('test error');
       return torrentInfo;
     } catch (err) {
-      this.logger.error(
-        `ERROR getTorrentInfoFromMagnetURI magnetURI=${magnetURI}`,
-      );
+      if (err instanceof TimeoutError) {
+        this.logger.error(
+          `ERROR timeout on getTorrentInfoFromMagnetURI magnetURI=${magnetURI}`,
+        );
+        const { infoHash } = await this.parseTorrent.parseTorrent(magnetURI);
+        await this.destroyTorrent(infoHash);
+      } else {
+        this.logger.error(
+          `ERROR getTorrentInfoFromMagnetURI magnetURI=${magnetURI}`,
+        );
+      }
       this.logger.error(err);
-      const { infoHash } = await this.parseTorrent.parseTorrent(magnetURI);
-      await this.destroyTorrent(infoHash);
+      throw err;
     }
-
-    return null;
   }
 
   async destroyTorrent(infoHash, destroyStore = true) {
@@ -202,10 +208,14 @@ export class WebTorrentService implements OnApplicationShutdown {
       });
 
       try {
-        await pTimeout(destroyTorrentTask, 1000 * 30);
+        await pTimeout(
+          destroyTorrentTask,
+          this.configService.get<number>('STREAMARRFS_TORRENT_START_TIMEOUT'),
+        );
       } catch (err) {
         this.logger.error(`ERROR failed to destroy ${infoHash}`);
         this.logger.error(err);
+        throw err;
       }
     }
   }
@@ -219,7 +229,9 @@ export class WebTorrentService implements OnApplicationShutdown {
   async startTorrentWithTimeout(
     infoHash,
     magnetURI,
-    timeout = 1000 * 30,
+    timeout = this.configService.get<number>(
+      'STREAMARRFS_TORRENT_START_TIMEOUT',
+    ),
   ): Promise<WebTorrent.Torrent | null> {
     const torrent = await this.getTorrentWithInfoHash(infoHash);
 
@@ -238,12 +250,12 @@ export class WebTorrentService implements OnApplicationShutdown {
         );
 
         this.logger.log(`torrent ${startedTorrent.infoHash} started`);
-      } catch (e) {
-        if (e instanceof TimeoutError) {
+      } catch (err) {
+        if (err instanceof TimeoutError) {
           this.logger.log(`torrent ${infoHash} start ready timeout`);
           await this.stopTorrentWithInfoHash(infoHash);
         } else {
-          throw e;
+          throw err;
         }
       }
     }

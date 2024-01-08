@@ -545,7 +545,9 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
             },
             {
               interval: 1000,
-              timeout: 1000 * 30,
+              timeout: this.configService.get<number>(
+                'STREAMARRFS_TORRENT_START_TIMEOUT',
+              ),
             },
           );
           const readyTorrent =

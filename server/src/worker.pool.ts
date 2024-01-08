@@ -41,4 +41,8 @@ export class WorkerPool implements OnApplicationShutdown {
       name: 'getTorrentInfoFromMagnetUri',
     });
   }
+
+  public queueSize() {
+    return this.pool.queueSize;
+  }
 }

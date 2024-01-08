@@ -33,13 +33,11 @@ export async function getTorrentInfoFromFeedUrl(
     logger.error(err);
     throw err;
   }
-
-  return null;
 }
 
 export async function getTorrentInfoFromMagnetUri(
   magnetURI,
-): Promise<TorrentInfo | null> {
+): Promise<TorrentInfo> {
   logger.log(`getTorrentInfoFromMagnetUri=${magnetURI}`);
 
   try {
@@ -53,6 +51,4 @@ export async function getTorrentInfoFromMagnetUri(
     logger.error(err);
     throw err;
   }
-
-  return null;
 }

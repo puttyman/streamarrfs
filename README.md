@@ -65,19 +65,24 @@ Given project is experimental and if successful it will be implemented. PR welco
 - Quickly finds content of your liking before needing a download.
 - No storage required. (only cached during streaming).
 
-#### Occassional plex 'Playback error' when tried to play.
+#### Occassional plex errors
+
+Errors:
+  - Playback error.
+  - Content Unavailable.
 
 You are likely to get this error if:
 - Your connection is not fast enough.
 - The torrent does not have enough peers.
-- The torrent has timedout to be in readable state.
+- The torrent has timed-out to be in readable state.
+- Plex is currently indexing the library and may cause torrents to start.
 
 Simply retry playing the video until it works.
 
 
 ## Troubleshooting
 
-### Common errors
+### Common issues
 
 - When you force remove the container, you have to sudo fusermount -uz /host/mount/point on the hostsystem!
 
