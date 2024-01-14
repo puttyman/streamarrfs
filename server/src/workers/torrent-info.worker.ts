@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { INestApplicationContext, Logger } from '@nestjs/common';
 import { WorkerModule } from './workers.module';
-import { TorrentUtil } from '../torrent-util/torrent.util';
 import { WebTorrentService } from '../webtorrent/webtorrent.service';
 
 import { TorrentInfo } from '../types';
@@ -15,29 +14,15 @@ async function initialize() {
   }
 }
 
-export async function getTorrentInfoFromFeedUrl(
-  feedUrl,
-): Promise<TorrentInfo | null> {
-  logger.log(`getTorrentInfoFromFeedUrl=${feedUrl}`);
-
-  try {
-    await initialize();
-    const parseTorrent = app.get<TorrentUtil>(TorrentUtil);
-    const webTorrentService = app.get<WebTorrentService>(WebTorrentService);
-    const magnetURI = await parseTorrent.getMagnetLinkFromJacketteUrl(feedUrl);
-    const torrentInfo =
-      await webTorrentService.getTorrentInfoFromMagnetURI(magnetURI);
-    return torrentInfo;
-  } catch (err) {
-    logger.error(`Error getting info for URL=${feedUrl}`);
-    logger.error(err);
-    throw err;
+export async function close() {
+  if (app !== null) {
+    await app.close();
   }
 }
 
-export async function getTorrentInfoFromMagnetUri(
+export async function getTorrentInfoFromMagnetUri({
   magnetURI,
-): Promise<TorrentInfo> {
+}): Promise<TorrentInfo> {
   logger.log(`getTorrentInfoFromMagnetUri=${magnetURI}`);
 
   try {

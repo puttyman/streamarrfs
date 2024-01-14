@@ -28,10 +28,20 @@ export class TorrentsService {
     });
   }
 
-  async popQueuedTorrent() {
+  async updateTorrentStatus(
+    torrent: Pick<Torrent, 'id'>,
+    status: TorrentInfoStatus,
+  ) {
+    return this.update(torrent.id, {
+      ...torrent,
+      status,
+    });
+  }
+
+  async popNewTorrent() {
     const torrent = await this.torrentsRepository.findOne({
       where: {
-        status: TorrentInfoStatus.QUEUED,
+        status: TorrentInfoStatus.NEW,
       },
       order: {
         createdAt: 'ASC',
@@ -39,13 +49,42 @@ export class TorrentsService {
     });
 
     if (torrent !== null) {
-      await this.update(torrent.id, {
-        ...torrent,
-        status: TorrentInfoStatus.PROCESSING,
-      });
+      await this.updateTorrentStatus(torrent, TorrentInfoStatus.QUEUED);
     }
 
     return torrent;
+  }
+
+  async queuedTorrents() {
+    return await this.torrentsRepository.find({
+      where: {
+        status: TorrentInfoStatus.QUEUED,
+      },
+    });
+  }
+
+  async processingTorrents(minutesAgo = 5) {
+    return await this.torrentsRepository.find({
+      where: {
+        status: TorrentInfoStatus.PROCESSING,
+        updatedAt: Raw(
+          (alias) =>
+            `${alias} > datetime(datetime(), '-${minutesAgo} minutes')`,
+        ),
+      },
+    });
+  }
+
+  async pendingTorrents(minutesAgo = 5) {
+    return this.torrentsRepository.find({
+      where: {
+        status: TorrentInfoStatus.PROCESSING,
+        updatedAt: Raw(
+          (alias) =>
+            `${alias} > datetime(datetime(), '-${minutesAgo} minutes')`,
+        ),
+      },
+    });
   }
 
   findAll() {

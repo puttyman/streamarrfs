@@ -14,11 +14,13 @@ export class WorkerPool implements OnApplicationShutdown {
       maxThreads: 1,
       minThreads: 1,
       concurrentTasksPerWorker: 1,
+      idleTimeout: Infinity,
     });
   }
   async onApplicationShutdown(signal?: string) {
     this.logger.log(`onApplicationShutdown signal=${signal} started`);
     try {
+      await this.closeWorker();
       await this.pool.destroy();
       this.logger.log(`SUCCESS destroying worker pool`);
     } catch (err) {
@@ -28,18 +30,24 @@ export class WorkerPool implements OnApplicationShutdown {
     this.logger.log(`onApplicationShutdown signal=${signal} completed`);
   }
 
-  public async getTorrentInfoFromFeedUrl(
-    feedUrl: string,
-  ): Promise<TorrentInfo> {
-    return await this.pool.run(feedUrl, { name: 'getTorrentInfoFromFeedUrl' });
+  private async closeWorker() {
+    return await this.pool.run(
+      {},
+      {
+        name: 'close',
+      },
+    );
   }
 
   public async getTorrentInfoFromMagnetUri(
     magnetURI: string,
   ): Promise<TorrentInfo> {
-    return await this.pool.run(magnetURI, {
-      name: 'getTorrentInfoFromMagnetUri',
-    });
+    return await this.pool.run(
+      { magnetURI },
+      {
+        name: 'getTorrentInfoFromMagnetUri',
+      },
+    );
   }
 
   public queueSize() {

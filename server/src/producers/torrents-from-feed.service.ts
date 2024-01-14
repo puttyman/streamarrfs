@@ -5,6 +5,7 @@ import RssParser from 'rss-parser';
 
 import { TorrentsService } from '../torrents/torrents.service';
 import { FeedType, type Feed } from '../types';
+import { TorrentInfoStatus } from 'src/torrents/entities/torrent.entity';
 
 @Injectable()
 export class TorrentsFromFeedService implements OnApplicationBootstrap {
@@ -26,7 +27,7 @@ export class TorrentsFromFeedService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
-    await this.torrentProducer();
+    this.torrentProducer();
   }
 
   @Cron(CronExpression.EVERY_HOUR, { name: TorrentsFromFeedService.name })
@@ -76,6 +77,7 @@ export class TorrentsFromFeedService implements OnApplicationBootstrap {
         await this.torrentService.create({
           feedGuid,
           feedURL,
+          status: TorrentInfoStatus.NEW,
           isVisible: false,
         });
       }

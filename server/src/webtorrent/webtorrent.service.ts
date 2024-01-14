@@ -31,6 +31,10 @@ export interface StreamarrFsTorrent extends WebTorrent.Torrent {
   activeReads?: number;
 }
 
+export interface TorrentOptionsV2 extends WebTorrent.TorrentOptions {
+  paused?: boolean;
+}
+
 @Injectable()
 export class WebTorrentService implements OnApplicationShutdown {
   private readonly logger = new Logger(WebTorrentService.name);
@@ -148,10 +152,11 @@ export class WebTorrentService implements OnApplicationShutdown {
   }
 
   async getTorrentInfoFromMagnetURI(magnetURI): Promise<TorrentInfo> {
+    this.logger.verbose(`getTorrentInfoFromMagnetURI=${magnetURI}`);
     const startTorrentTask = new Promise<WebTorrent.Torrent>((resolve) => {
       this.client.add(
         magnetURI,
-        { path: this.downloadPath },
+        { path: this.downloadPath, paused: true } as TorrentOptionsV2,
         function ontorrent(torrent) {
           resolve(torrent);
         },
@@ -163,11 +168,12 @@ export class WebTorrentService implements OnApplicationShutdown {
         startTorrentTask,
         this.configService.get<number>('STREAMARRFS_TORRENT_START_TIMEOUT'),
       );
-      const torrentInfo = {
+      const torrentInfo: TorrentInfo = {
         ...{},
         infoHash,
         name,
         magnetURI,
+        sourceType: 'magnet',
         files: files.map((file) => {
           return {
             name: file.name,
@@ -177,7 +183,6 @@ export class WebTorrentService implements OnApplicationShutdown {
         }),
       };
       await this.destroyTorrent(infoHash);
-      // throw new Error('test error');
       return torrentInfo;
     } catch (err) {
       if (err instanceof TimeoutError) {

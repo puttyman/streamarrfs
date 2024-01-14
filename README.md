@@ -64,20 +64,31 @@ Given project is experimental and if successful it will be implemented. PR welco
 
 - Quickly finds content of your liking before needing a download.
 - No storage required. (only cached during streaming).
+- Skim through multiple videos to check content.
 
 #### Occassional plex errors
 
-Errors:
+##### Errors
   - Playback error.
   - Content Unavailable.
+  - An error occurred trying to play "...". Error code: s1001 (Network)
 
-You are likely to get this error if:
+##### You are likely to get this error if:
 - Your connection is not fast enough.
+- Your server is not fast enough.
 - The torrent does not have enough peers.
 - The torrent has timed-out to be in readable state.
 - Plex is currently indexing the library and may cause torrents to start.
 
-Simply retry playing the video until it works.
+##### Solutions & Workarounds
+ - Simply retry playing the video until it works.
+ - Use a feed source that returns movies with 100+ Seeds. e.g. YTS
+ - Check CPU usage and see if your server is powerful enough.
+
+##### ERROR - Please check that the file exists and the necessary drive is mounted.
+
+Plex will not see the files from streamarrfs if it has been restarted. 
+Plex should always be started after streamarrfs has successfully been mounted. Restarting plex should fix the issue.
 
 
 ## Troubleshooting
