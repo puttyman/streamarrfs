@@ -156,7 +156,7 @@ export class WebTorrentService implements OnApplicationShutdown {
     const startTorrentTask = new Promise<WebTorrent.Torrent>((resolve) => {
       this.client.add(
         magnetURI,
-        { path: this.downloadPath, paused: true } as TorrentOptionsV2,
+        { path: this.downloadPath } as TorrentOptionsV2,
         function ontorrent(torrent) {
           resolve(torrent);
         },

@@ -13,7 +13,7 @@ export class WorkerPool implements OnApplicationShutdown {
       filename: resolve(__dirname, 'workers/torrent-info.worker.js'),
       maxThreads: 1,
       minThreads: 1,
-      concurrentTasksPerWorker: 1,
+      concurrentTasksPerWorker: 5,
       idleTimeout: Infinity,
     });
   }
