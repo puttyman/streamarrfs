@@ -68,53 +68,6 @@ export class TorrentFromQueueService {
     return false;
   }
 
-  // @Cron(CronExpression.EVERY_SECOND, {
-  //   name: TorrentFromQueueService.name,
-  //   disabled: false,
-  // })
-  // async torrentInfoJobProducer() {
-  //   const queuedTorrents = await this.torrentsService.queuedTorrents();
-  //   const processingTorrents = await this.torrentsService.processingTorrents();
-  //   if (queuedTorrents.length > 5) {
-  //     this.logger.log(
-  //       `${queuedTorrents.length} queued torrents therefore sleeping.`,
-  //     );
-  //     return;
-  //   }
-
-  //   if (processingTorrents.length > 5) {
-  //     this.logger.log(
-  //       `${processingTorrents.length} processing torrents therefore sleeping.`,
-  //     );
-  //     return;
-  //   }
-
-  //   if (this.workerPool.queueSize() > 5) {
-  //     this.logger.log(
-  //       `${this.workerPool.queueSize()} job(s) queue already therefore sleeping.`,
-  //     );
-  //     return;
-  //   }
-
-  //   const torrent = await this.torrentsService.popNewTorrent();
-
-  //   if (!torrent) {
-  //     this.logger.log(`no queued torrent found therefore sleeping.`);
-  //     return;
-  //   }
-
-  //   try {
-  //     await this.indexPopedTorrent(torrent);
-  //   } catch (err) {
-  //     await this.torrentsService.update(torrent.id, {
-  //       ...torrent,
-  //       status: TorrentInfoStatus.ERROR,
-  //       errors: err.message ?? `Error indexing torrent`,
-  //       isVisible: false,
-  //     });
-  //   }
-  // }
-
   hasEnoughInfoForReadyStatus(torrentInfo: TorrentInfo) {
     return (
       torrentInfo &&

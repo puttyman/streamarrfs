@@ -20,7 +20,7 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [âš
 ### Supported Indexer
   - [Jackett](https://github.com/Jackett/Jackett)
 
-## Setup instructions (Plex)
+## Setup instructions - Plex
 
 At the present this project only supports running as a docker image and on a amd64 architecture. PR is welcomed for any features. Given this project is at an experimental stage it is recommend to use a seperate plex server instance.
 
@@ -43,6 +43,9 @@ At the present this project only supports running as a docker image and on a amd
   9. Update the `PLEX_CLAIM` with the token generated at 8.
   10. Save and start with `docker-compose up`
 
+## Setup instructions - Jellyfin - TODO
+
+TODO
 
 ## Development
 
