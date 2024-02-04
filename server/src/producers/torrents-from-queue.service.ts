@@ -7,20 +7,20 @@ import {
   TorrentInfoStatus,
 } from '../torrents/entities/torrent.entity';
 import { TorrentUtil } from '../torrent-util/torrent.util';
-import { WorkerPool } from '../worker.pool';
-import { TorrentInfo } from 'src/types';
+import { TorrentInfo } from '../types';
+import { TorrentInfoService } from '../torrent-info/torrent-info.service';
 
 @Injectable()
 export class TorrentFromQueueService {
   private readonly logger = new Logger(TorrentFromQueueService.name);
   private isQueueJobRunning = false;
   private isProcessingJobRunning = false;
-  private queue;
+  private queue: PQueue;
 
   constructor(
     private readonly torrentsService: TorrentsService,
     private readonly torrentUtil: TorrentUtil,
-    private readonly workerPool: WorkerPool,
+    private readonly torrentInfoService: TorrentInfoService,
   ) {
     this.queue = new PQueue({ concurrency: 5 });
   }
@@ -44,24 +44,28 @@ export class TorrentFromQueueService {
     disabled: false,
   })
   async consumedQueuedTorrents() {
-    if (this.isProcessingJobRunning === false && this.isQueueBusy() === false) {
-      this.isProcessingJobRunning = true;
-      const queuedTorrents = await this.torrentsService.queuedTorrents();
-      for (const queuedTorrent of queuedTorrents) {
-        if (this.isQueueBusy()) break;
+    // if (this.isProcessingJobRunning !== false) return;
+    // if (this.isQueueBusy()) return;
 
-        await this.torrentsService.updateTorrentStatus(
-          queuedTorrent,
-          TorrentInfoStatus.PROCESSING,
-        );
-        await this.queue.add(() => this.indexTorrent(queuedTorrent));
-      }
+    this.isProcessingJobRunning = true;
+    const queuedTorrents = await this.torrentsService.queuedTorrents();
+
+    for (const queuedTorrent of queuedTorrents) {
+      await this.torrentsService.updateTorrentStatus(
+        queuedTorrent,
+        TorrentInfoStatus.PROCESSING,
+      );
     }
+
+    for (const queuedTorrent of queuedTorrents) {
+      await this.queue.add(() => this.indexTorrent(queuedTorrent));
+    }
+
     this.isProcessingJobRunning = false;
   }
 
   isQueueBusy() {
-    return this.queue.pending + this.queue.size >= 5;
+    return false;
   }
 
   // @Cron(CronExpression.EVERY_SECOND, {
@@ -111,8 +115,9 @@ export class TorrentFromQueueService {
   //   }
   // }
 
-  hasTorrentInfoForReady(torrentInfo: TorrentInfo) {
+  hasEnoughInfoForReadyStatus(torrentInfo: TorrentInfo) {
     return (
+      torrentInfo &&
       torrentInfo.infoHash !== null &&
       typeof torrentInfo.infoHash === 'string' &&
       torrentInfo.files !== null &&
@@ -139,6 +144,7 @@ export class TorrentFromQueueService {
 
   async indexTorrent(torrent: Torrent) {
     let torrentInfo: TorrentInfo;
+    // If URI is a link to a torrent file
     if (torrent.feedURL.startsWith('http')) {
       this.torrentsService.updateTorrentStatus(
         torrent,
@@ -149,6 +155,7 @@ export class TorrentFromQueueService {
       );
     }
 
+    // If URI is a magnet link
     if (
       (torrentInfo && torrentInfo.sourceType === 'magnet') ||
       torrent.feedURL.startsWith('magnet')
@@ -164,16 +171,14 @@ export class TorrentFromQueueService {
           return torrentInfo.magnetURI;
       })();
       torrentInfo =
-        await this.workerPool.getTorrentInfoFromMagnetUri(magnetURI);
+        await this.torrentInfoService.getTorrentInfoFromMagnetUri(magnetURI);
     }
 
-    if (this.hasTorrentInfoForReady(torrentInfo)) {
-      this.logger.log(`torrent ${torrentInfo.infoHash} updating to ready`);
+    if (this.hasEnoughInfoForReadyStatus(torrentInfo)) {
+      this.logger.log(`torrent ${torrent.id} updating to ready`);
       await this.updateTorrentToReady(torrent, torrentInfo);
     } else {
-      this.logger.warn(
-        `torrent ${torrentInfo.infoHash} failed to get full info`,
-      );
+      this.logger.warn(`torrent ${torrent.id} failed to get full info`);
       await this.torrentsService.update(torrent.id, {
         status: TorrentInfoStatus.ERROR,
         errors: 'Failed to get info',

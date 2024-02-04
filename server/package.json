@@ -41,13 +41,11 @@
     "p-timeout": "^4.1.0",
     "p-wait-for": "^3.2.0",
     "parse-torrent": "^11.0.14",
-    "piscina": "^4.2.1",
     "reflect-metadata": "^0.1.14",
     "rss-parser": "^3.13.0",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.17",
-    "webtorrent": "^2.1.32",
-    "workerpool": "^9.0.4"
+    "webtorrent": "^2.1.32"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.2.1",

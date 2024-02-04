@@ -15,6 +15,10 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [âš
 - Polls feed(s) on desired frequency.
 - Ability to seek through video while streaming.
 - File system can be mounted for other usage e.g. nginx as a file server.
+- Handle torrent duplicates from multiple feeds
+
+### Supported Indexer
+  - [Jackett](https://github.com/Jackett/Jackett)
 
 ## Setup instructions (Plex)
 
@@ -24,6 +28,7 @@ At the present this project only supports running as a docker image and on a amd
   - A plex account and able to generate a claim token at https://www.plex.tv/claim/ .
   - Fuse v2 (host).
   - Docker & Docker compose v2 (host).
+  - Root access. Running the image as a user should be possible with a few tweaks.
 
 ## Steps (Tested on Ubuntu 22.04 LTS)
 
@@ -84,11 +89,14 @@ Given project is experimental and if successful it will be implemented. PR welco
  - Simply retry playing the video until it works.
  - Use a feed source that returns movies with 100+ Seeds. e.g. YTS
  - Check CPU usage and see if your server is powerful enough.
+ - Plex indexing - wait for 1-2mins streamarrfs will stop the torrent after no activity.
 
 ##### ERROR - Please check that the file exists and the necessary drive is mounted.
 
 Plex will not see the files from streamarrfs if it has been restarted. 
 Plex should always be started after streamarrfs has successfully been mounted. Restarting plex should fix the issue.
+
+See [example](examples/plex/docker-compose.yml) to start plex as a docker image and depends on streamarrfs.
 
 
 ## Troubleshooting

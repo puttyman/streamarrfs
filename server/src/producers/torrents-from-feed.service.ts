@@ -5,8 +5,7 @@ import RssParser from 'rss-parser';
 
 import { TorrentsService } from '../torrents/torrents.service';
 import { FeedType, type Feed } from '../types';
-import { TorrentInfoStatus } from 'src/torrents/entities/torrent.entity';
-import { throws } from 'assert';
+import { TorrentInfoStatus } from '../torrents/entities/torrent.entity';
 
 @Injectable()
 export class TorrentsFromFeedService implements OnApplicationBootstrap {

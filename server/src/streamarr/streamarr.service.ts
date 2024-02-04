@@ -11,6 +11,11 @@ export class StreamarrService {
     private readonly torrentService: TorrentsService,
   ) {}
 
+  getPromise() {
+    const p = Promise.resolve(true);
+    return p;
+  }
+
   async addTorrent({ magnetURI }: AddTorrentStreamarrDto) {
     try {
       const torrent = await this.torrentService.findOneByMagetURI(magnetURI);
