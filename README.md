@@ -93,6 +93,7 @@ Given project is experimental and if successful it will be implemented. PR welco
  - Use a feed source that returns movies with 100+ Seeds. e.g. YTS
  - Check CPU usage and see if your server is powerful enough.
  - Plex indexing - wait for 1-2mins streamarrfs will stop the torrent after no activity.
+ - Lower the frequency that torrents are added from feeds.
 
 ##### ERROR - Please check that the file exists and the necessary drive is mounted.
 
