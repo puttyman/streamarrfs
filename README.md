@@ -27,12 +27,28 @@ At the present this project only supports running as a docker image and on a amd
 
 ## Steps (Tested on Ubuntu 22.04 LTS)
 
-  1. Create your Nanode 1 GB
-  2. SSH into it.
-  3. `apt update && apt install docker.io` (you may skip if you already have docker and compose)
-  4. Create the mount directory ```mkdir /tmp/streamarrfs```
-  5. Create a directory for the docker compose file `mkdir /opt/streamarrfs`
-  6. Create the docker-compose.yml file. `nano /opt/streamarrfs/docker-compose.yml`
+  1. Make sure your server has the fuse at `/dev/fuse`.
+
+    `cat /dev/fuse`
+
+  2. SSH as root with command:
+  
+    `sudo su`
+  
+  3. Install docker engine & docker compose (you may skip if you already have docker and compose)
+
+    `apt update && apt install docker.io`
+
+  4. Create a directory where the torrents will be mounted (vitual)
+  
+    `mkdir /tmp/streamarrfs`
+  
+  5. Create a directory for the docker compose file 
+  
+    `mkdir /opt/streamarrfs`
+  
+  6. Edit the content of the docker-compose.yml file. 
+    `nano /opt/streamarrfs/docker-compose.yml`
   7. Paste the content from the example [docker-compose.yml](examples/plex/docker-compose.yml) file.
   8. Generate a claim token at https://www.plex.tv/claim/ .
   9. Update the `PLEX_CLAIM` with the token generated at 8.
@@ -73,11 +89,26 @@ Errors:
 
 You are likely to get this error if:
 - Your connection is not fast enough.
+- Your server is not fast enough.
 - The torrent does not have enough peers.
 - The torrent has timed-out to be in readable state.
 - Plex is currently indexing the library and may cause torrents to start.
+- Your server does not have enough RAM. At least 4gb is recommended due to [webtorrent issue](https://github.com/webtorrent/webtorrent/issues/1973)
+- The video your are trying to stream have multiple versions. e.g. movie.1080p.mp4 movie.2160p.mp4 
 
-Simply retry playing the video until it works.
+##### Solutions & Workarounds
+ - Simply retry playing the video until it works.
+ - Use a feed source that returns movies with 100+ Seeds. e.g. YTS
+ - Check CPU usage and see if your server is powerful enough.
+ - Plex indexing - wait for 1-2mins streamarrfs will stop the torrent after no activity.
+ - Lower the frequency that torrents are added from feeds.
+
+##### ERROR - Please check that the file exists and the necessary drive is mounted.
+
+Plex will not see the files from streamarrfs if it has been restarted. 
+Plex should always be started after streamarrfs has successfully been mounted. Restarting plex should fix the issue.
+
+See [example](examples/plex/docker-compose.yml) to start plex as a docker image and depends on streamarrfs.
 
 
 ## Troubleshooting
