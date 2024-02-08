@@ -1,14 +1,8 @@
-import {
-  Injectable,
-  Logger,
-  OnApplicationBootstrap,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TorrentsService } from '../torrents/torrents.service';
-import { WorkerPool } from '../worker.pool';
+import { TorrentInfoService } from '../torrent-info/torrent-info.service';
 import { TorrentInfoStatus } from 'src/torrents/entities/torrent.entity';
-
 @Injectable()
 export class TorrentsFreeService implements OnApplicationBootstrap {
   private readonly logger = new Logger(TorrentsFreeService.name);
@@ -25,16 +19,16 @@ export class TorrentsFreeService implements OnApplicationBootstrap {
   };
 
   constructor(
-    private readonly torrentsService: TorrentsService,
     private readonly configService: ConfigService,
-    private readonly workerPool: WorkerPool,
+    private readonly torrentsService: TorrentsService,
+    private readonly torrentInfoService: TorrentInfoService,
   ) {}
 
   async onApplicationBootstrap() {
     const shouldAddFreeTorrents = this.configService.get<boolean>(
       'STREAMARRFS_ADD_FREE_TORRENTS',
     );
-    if (!shouldAddFreeTorrents) {
+    if (shouldAddFreeTorrents) {
       this.logger.verbose(`Skipping adding free torrents`);
       return;
     }
@@ -45,13 +39,15 @@ export class TorrentsFreeService implements OnApplicationBootstrap {
           await this.torrentsService.findOneByMagetURI(magnetURI);
         if (!existingTorrent) {
           const { infoHash, name, files } =
-            await this.workerPool.getTorrentInfoFromMagnetUri(magnetURI);
+            await this.torrentInfoService.getTorrentInfoFromMagnetUri(
+              magnetURI,
+            );
           await this.torrentsService.create({
             magnetURI,
             infoHash,
             name,
             files: JSON.stringify(files, null, 0),
-            status: TorrentInfoStatus.QUEUED,
+            status: TorrentInfoStatus.READY,
             isVisible: false,
             feedGuid: infoHash,
             feedURL: `free-${infoHash}`,

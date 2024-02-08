@@ -5,6 +5,7 @@ import RssParser from 'rss-parser';
 
 import { TorrentsService } from '../torrents/torrents.service';
 import { FeedType, type Feed } from '../types';
+import { TorrentInfoStatus } from '../torrents/entities/torrent.entity';
 
 @Injectable()
 export class TorrentsFromFeedService implements OnApplicationBootstrap {
@@ -26,7 +27,7 @@ export class TorrentsFromFeedService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
-    await this.torrentProducer();
+    this.torrentProducer();
   }
 
   @Cron(CronExpression.EVERY_HOUR, { name: TorrentsFromFeedService.name })
@@ -48,7 +49,7 @@ export class TorrentsFromFeedService implements OnApplicationBootstrap {
       this.logger.log(`fetching torrents from feed`);
       for (const feed of this.feeds) {
         if (feed.type === FeedType.RSS) {
-          await this.handleRssFeed(feed);
+          await this.processRssFeed(feed);
           continue;
         }
         this.logger.warn(`Unsupported feed type=${feed.type}`);
@@ -61,24 +62,30 @@ export class TorrentsFromFeedService implements OnApplicationBootstrap {
     this.isTaskRunning = false;
   }
 
-  async handleRssFeed(feed: Feed) {
-    const feedContents = await this.rssParser.parseURL(feed.url);
-    this.logger.log(
-      `received ${feedContents.items.length ?? 'no'} items from feed=${
-        feed.name
-      }`,
-    );
-    for (const { guid: feedGuid, link: feedURL } of feedContents.items) {
-      if (!feedGuid || !feedURL) continue;
-      const existingTorrent =
-        await this.torrentService.findOneByFeedGuid(feedGuid);
-      if (!existingTorrent) {
-        await this.torrentService.create({
-          feedGuid,
-          feedURL,
-          isVisible: false,
-        });
+  async processRssFeed(feed: Feed) {
+    try {
+      const feedContents = await this.rssParser.parseURL(feed.url);
+      this.logger.log(
+        `received ${feedContents.items.length ?? 'no'} items from feed=${
+          feed.name
+        }`,
+      );
+      for (const { guid: feedGuid, link: feedURL } of feedContents.items) {
+        if (!feedGuid || !feedURL) continue;
+        const existingTorrent =
+          await this.torrentService.findOneByFeedGuid(feedGuid);
+        if (!existingTorrent) {
+          await this.torrentService.create({
+            feedGuid,
+            feedURL,
+            status: TorrentInfoStatus.NEW,
+            isVisible: false,
+          });
+        }
       }
+    } catch (err) {
+      this.logger.error(`Error processing feed=${feed.name}`);
+      this.logger.error(err);
     }
   }
 }
