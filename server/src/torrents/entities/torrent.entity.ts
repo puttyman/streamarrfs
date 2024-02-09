@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 
 export enum TorrentInfoStatus {
+  NEW = 'NEW',
   QUEUED = 'QUEUED',
   PROCESSING = 'PROCESSING',
   READY = 'READY',

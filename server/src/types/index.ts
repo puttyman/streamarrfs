@@ -1,15 +1,4 @@
-export type TorrentInfoFile = {
-  name: string;
-  path: string;
-  length: number;
-};
-
-export type TorrentInfo = {
-  infoHash: string;
-  name: string;
-  magnetURI: string;
-  files: Array<TorrentInfoFile>;
-};
+import type { TorrentFile } from 'webtorrent';
 
 export type StreamarrFsFileEvent = {
   infoHash: string;
@@ -31,4 +20,13 @@ export type Feed = {
   url: string;
   type: FeedType;
   indexer: FeedIndexer;
+};
+
+export type TorrentInfo = {
+  name?: string;
+  infoHash?: string;
+  magnetURI?: string;
+  torrentBlob?: ArrayBuffer;
+  files?: Array<Pick<TorrentFile, 'name' | 'path' | 'length'>>;
+  sourceType: 'magnet' | 'file';
 };

@@ -15,8 +15,12 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [âš
 - Polls feed(s) on desired frequency.
 - Ability to seek through video while streaming.
 - File system can be mounted for other usage e.g. nginx as a file server.
+- Handle torrent duplicates from multiple feeds
 
-## Setup instructions (Plex)
+### Supported Indexer
+  - [Jackett](https://github.com/Jackett/Jackett)
+
+## Setup instructions - Plex
 
 At the present this project only supports running as a docker image and on a amd64 architecture. PR is welcomed for any features. Given this project is at an experimental stage it is recommend to use a seperate plex server instance.
 
@@ -24,6 +28,7 @@ At the present this project only supports running as a docker image and on a amd
   - A plex account and able to generate a claim token at https://www.plex.tv/claim/ .
   - Fuse v2 (host).
   - Docker & Docker compose v2 (host).
+  - Root access. Running the image as a user should be possible with a few tweaks.
 
 ## Steps (Tested on Ubuntu 22.04 LTS)
 
@@ -54,6 +59,9 @@ At the present this project only supports running as a docker image and on a amd
   9. Update the `PLEX_CLAIM` with the token generated at 8.
   10. Save and start with `docker-compose up`
 
+## Setup instructions - Jellyfin - TODO
+
+TODO
 
 ## Development
 
@@ -80,14 +88,16 @@ Given project is experimental and if successful it will be implemented. PR welco
 
 - Quickly finds content of your liking before needing a download.
 - No storage required. (only cached during streaming).
+- Skim through multiple videos to check content.
 
 #### Occassional plex errors
 
-Errors:
+##### Errors
   - Playback error.
   - Content Unavailable.
+  - An error occurred trying to play "...". Error code: s1001 (Network)
 
-You are likely to get this error if:
+##### You are likely to get this error if:
 - Your connection is not fast enough.
 - Your server is not fast enough.
 - The torrent does not have enough peers.

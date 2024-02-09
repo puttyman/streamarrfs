@@ -10,7 +10,6 @@ import { TorrentsModule } from './torrents/torrents.module';
 import { StreamarrController } from './streamarr/streamarr.controller';
 import { StreamarrService } from './streamarr/streamarr.service';
 import { StreamarrFsService } from './streamarrfs/streamarrfs.service';
-import { WorkerPool } from './worker.pool';
 import {
   useWebtorrentServiceProvider,
   useTorrentUtilProvider,
@@ -19,6 +18,7 @@ import { TorrentsFromFeedService } from './producers/torrents-from-feed.service'
 import { TorrentFromQueueService } from './producers/torrents-from-queue.service';
 import { TorrentsFreeService } from './producers/torrents-free.service';
 import { dataSourceOptions } from 'db/data-source';
+import { TorrentInfoService } from './torrent-info/torrent-info.service';
 
 @Module({
   imports: [
@@ -52,10 +52,10 @@ import { dataSourceOptions } from 'db/data-source';
     StreamarrService,
     TorrentsFromFeedService,
     StreamarrFsService,
-    WorkerPool,
     useWebtorrentServiceProvider(config().STREAMARRFS_WEBTORRENT_TORRENT_PORT),
     TorrentFromQueueService,
     TorrentsFreeService,
+    TorrentInfoService,
   ],
 })
 export class AppModule implements NestModule {
