@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import config from './config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,6 +25,10 @@ import { TorrentsService } from './torrents/torrents.service';
 import { TorrentsController } from './torrents/torrents.controller';
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'static'),
+      exclude: ['/api/(.*)'],
+    }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       load: [config],

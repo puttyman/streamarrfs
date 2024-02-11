@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streamarrfs - Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+  <!-- <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> -->
+
+
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="stats">
+      <h1>Stats</h1>
+
+      <div>
+        <div id="sse" hx-ext="sse" sse-connect="/api/streamarrfs/sse">
+          <!-- Data will be populated dynamically -->
+          <div id="sse2" sse-swap="message" hx-trigger="sse:message"></div>
+        </div>
+        <table id="torrentTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Ready</th>
+              <th>Download Speed</th>
+              <th>Upload Speed</th>
+              <th>Downloaded</th>
+              <th>Paused</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+  </div>
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var tableBody = document.getElementById('torrentTable').querySelector('tbody');
+
+      // Function to handle SSE updates
+      function handleSSEUpdate(event) {
+        var data = JSON.parse(event.data);
+        renderTorrents(data.torrents);
+      }
+
+      // Listen for SSE updates
+      document.querySelector('#torrentTable').addEventListener('sse:message', function (event) {
+        console.log(`zzzzzzzzz`)
+        // event.target.addEventListener('message', handleSSEUpdate);
+      });
+
+      function renderTorrents(torrents) {
+        tableBody.innerHTML = ''; // Clear previous data
+        torrents.forEach(function (torrent) {
+          var row = document.createElement('tr');
+          row.innerHTML = `
+                        <td>${torrent.name}</td>
+                        <td>${torrent.ready}</td>
+                        <td>${torrent.downloadSpeed}</td>
+                        <td>${torrent.uploadSpeed}</td>
+                        <td>${torrent.downloaded}</td>
+                        <td>${torrent.paused}</td>
+                        <td>${torrent.status}</td>
+                    `;
+          tableBody.appendChild(row);
+        });
+      }
+    });
+  </script>
+  <script src="https://unpkg.com/htmx.org/dist/htmx.js"></script>
+  <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
+
+</body>
+
+</html>
