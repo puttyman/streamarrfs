@@ -4,10 +4,10 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [âš
 
 ## How does it work?
   1. Streamarrfs finds torrents from your favorite torrent indexer. e.g. [Jackett](https://github.com/Jackett/Jackett)
-  2. Finds list of files that are in the torrent.
   2. Stores info about torrents and including files in its internal database (sqlite).
   3. Mount and creates a virtual directory through [fuse](https://github.com/libfuse/libfuse) to simulate as if the files in the torrents are present locally.
   4. Whenever a read if requested to a file, Streamarrfs starts the torrent and stream through the portion of the file requested.
+  5. When streaming has stopped the torrent in the client is destroyed and including the file on disk.
 
 ## Features
 - Monitors torrents that are not being streamed and stop them.
@@ -15,7 +15,7 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [âš
 - Polls feed(s) on desired frequency.
 - Ability to seek through video while streaming.
 - File system can be mounted for other usage e.g. nginx as a file server.
-- Handle torrent duplicates from multiple feeds
+- Handles torrent duplicates from multiple feeds
 
 ### Supported Indexer
   - [Jackett](https://github.com/Jackett/Jackett)
@@ -27,30 +27,30 @@ At the present this project only supports running as a docker image and on a amd
 ### Dependencies & Prerequisites
   - A plex account and able to generate a claim token at https://www.plex.tv/claim/ .
   - Fuse v2 (host).
-  - Docker & Docker compose v2 (host).
+  - Docker & Docker compose v3 (host).
   - Root access. Running the image as a user should be possible with a few tweaks.
 
 ## Steps (Tested on Ubuntu 22.04 LTS)
 
   1. Make sure your server has the fuse at `/dev/fuse`.
 
-    `cat /dev/fuse`
+    cat /dev/fuse
 
   2. SSH as root with command:
   
-    `sudo su`
+    sudo su
   
   3. Install docker engine & docker compose (you may skip if you already have docker and compose)
 
-    `apt update && apt install docker.io`
+    apt update && apt install docker.io
 
   4. Create a directory where the torrents will be mounted (vitual)
   
-    `mkdir /tmp/streamarrfs`
+    mkdir /tmp/streamarrfs
   
   5. Create a directory for the docker compose file 
   
-    `mkdir /opt/streamarrfs`
+    mkdir /opt/streamarrfs
   
   6. Edit the content of the docker-compose.yml file. 
     `nano /opt/streamarrfs/docker-compose.yml`

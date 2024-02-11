@@ -8,8 +8,8 @@ import {
   Delete,
 } from '@nestjs/common';
 import { TorrentsService } from './torrents.service';
-import { CreateTorrentDto } from './dto/create-torrent.dto';
-import { UpdateTorrentDto } from './dto/update-torrent.dto';
+import { CreateTorrentDto } from './db/dto/create-torrent.dto';
+import { UpdateTorrentDto } from './db/dto/update-torrent.dto';
 
 @Controller('api/torrents')
 export class TorrentsController {

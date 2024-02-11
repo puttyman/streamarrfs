@@ -1,11 +1,11 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TorrentsService } from '../torrents/torrents.service';
-import { TorrentInfoService } from '../torrent-info/torrent-info.service';
-import { TorrentInfoStatus } from 'src/torrents/entities/torrent.entity';
+import { TorrentsService } from '../../torrents.service';
+import { TorrentInfoService } from '../../../torrent-info/torrent-info.service';
+import { TorrentInfoStatus } from '../../db/entities/torrent.entity';
 @Injectable()
-export class TorrentsFreeService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(TorrentsFreeService.name);
+export class FreeTorrentFeedService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(FreeTorrentFeedService.name);
 
   private readonly freeMagnetLinks = {
     bigBuckBunny:

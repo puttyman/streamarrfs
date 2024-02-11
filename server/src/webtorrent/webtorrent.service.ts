@@ -98,10 +98,10 @@ export class WebTorrentService implements OnApplicationShutdown {
     });
   }
 
-  async getTorrentWithInfoHash(infoHash): Promise<WebTorrent.Torrent | null> {
+  async getTorrentWithInfoHash(infoHash): Promise<StreamarrFsTorrent | null> {
     const runningTorrent = (await this.client.get(
       infoHash,
-    )) as WebTorrent.Torrent;
+    )) as StreamarrFsTorrent;
 
     return runningTorrent;
   }
@@ -113,7 +113,7 @@ export class WebTorrentService implements OnApplicationShutdown {
 
   async startTorrentWithMagnetLink(
     magnetURI,
-  ): Promise<WebTorrent.Torrent | null> {
+  ): Promise<StreamarrFsTorrent | null> {
     const startTorrent = new Promise(async (resolve) => {
       this.client.add(
         magnetURI,
@@ -125,7 +125,7 @@ export class WebTorrentService implements OnApplicationShutdown {
       );
     });
 
-    const startedTorrent = (await startTorrent) as WebTorrent.Torrent;
+    const startedTorrent = (await startTorrent) as StreamarrFsTorrent;
     return startedTorrent;
   }
 
@@ -153,12 +153,12 @@ export class WebTorrentService implements OnApplicationShutdown {
 
   async getTorrentInfoFromMagnetURI(magnetURI): Promise<TorrentInfo> {
     this.logger.verbose(`getTorrentInfoFromMagnetURI=${magnetURI}`);
-    const startTorrentTask = new Promise<WebTorrent.Torrent>((resolve) => {
+    const startTorrentTask = new Promise<StreamarrFsTorrent>((resolve) => {
       this.client.add(
         magnetURI,
         { path: this.downloadPath } as TorrentOptionsV2,
         function ontorrent(torrent) {
-          resolve(torrent);
+          resolve(torrent as StreamarrFsTorrent);
         },
       );
     });
@@ -237,7 +237,7 @@ export class WebTorrentService implements OnApplicationShutdown {
     timeout = this.configService.get<number>(
       'STREAMARRFS_TORRENT_START_TIMEOUT',
     ),
-  ): Promise<WebTorrent.Torrent | null> {
+  ): Promise<StreamarrFsTorrent | null> {
     const torrent = await this.getTorrentWithInfoHash(infoHash);
 
     if (torrent && torrent.ready === true && torrent.paused === true) {
@@ -255,6 +255,7 @@ export class WebTorrentService implements OnApplicationShutdown {
         );
 
         this.logger.log(`torrent ${startedTorrent.infoHash} started`);
+        return startedTorrent;
       } catch (err) {
         if (err instanceof TimeoutError) {
           this.logger.log(`torrent ${infoHash} start ready timeout`);
@@ -315,11 +316,13 @@ export class WebTorrentService implements OnApplicationShutdown {
    * @param infoHash
    * @returns torrent or null
    */
-  async findReadyAndUnpausedTorrent(infoHash) {
+  async findReadyAndUnpausedTorrent(
+    infoHash,
+  ): Promise<StreamarrFsTorrent | null> {
     const torrent = await this.getTorrentWithInfoHash(infoHash);
 
     if (torrent && torrent.ready === true && torrent.paused === false) {
-      return torrent;
+      return torrent as StreamarrFsTorrent;
     }
 
     return null;
@@ -435,7 +438,14 @@ export class WebTorrentService implements OnApplicationShutdown {
         this.logger.verbose(
           `pauseOrStopTorrents stopping ${streamarrfsTorrent.infoHash}`,
         );
-        await this.stopTorrentWithInfoHash(streamarrfsTorrent.infoHash);
+
+        try {
+          await this.stopTorrentWithInfoHash(streamarrfsTorrent.infoHash);
+        } catch (err) {
+          this.logger.error(
+            `ERROT stopping torrent ${streamarrfsTorrent.infoHash}`,
+          );
+        }
       }
     }
   }

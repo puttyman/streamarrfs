@@ -32,6 +32,7 @@
     "@nestjs/mapped-types": "^2.0.4",
     "@nestjs/platform-express": "^10.2.10",
     "@nestjs/schedule": "^3.0.4",
+    "@nestjs/serve-static": "^4.0.1",
     "@nestjs/typeorm": "^10.0.1",
     "@types/webtorrent": "^0.109.7",
     "better-sqlite3": "^8.7.0",

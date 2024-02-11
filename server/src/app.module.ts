@@ -3,10 +3,11 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import config from './config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TorrentsModule } from './torrents/torrents.module';
 import { StreamarrController } from './streamarr/streamarr.controller';
 import { StreamarrService } from './streamarr/streamarr.service';
 import { StreamarrFsService } from './streamarrfs/streamarrfs.service';
@@ -14,14 +15,20 @@ import {
   useWebtorrentServiceProvider,
   useTorrentUtilProvider,
 } from './module-providers';
-import { TorrentsFromFeedService } from './producers/torrents-from-feed.service';
-import { TorrentFromQueueService } from './producers/torrents-from-queue.service';
-import { TorrentsFreeService } from './producers/torrents-free.service';
+import { JacketteTorrentSourceService } from './torrents/sources/feeds/jackette/jackette-torrent-source.service';
+import { TorrentIndexerService } from './torrents/indexer/torrent-indexer.service';
+import { FreeTorrentFeedService } from './torrents/sources/free/free-torrent-source.service';
 import { dataSourceOptions } from 'db/data-source';
 import { TorrentInfoService } from './torrent-info/torrent-info.service';
-
+import { Torrent } from './torrents/db/entities/torrent.entity';
+import { TorrentsService } from './torrents/torrents.service';
+import { TorrentsController } from './torrents/torrents.controller';
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'static'),
+      exclude: ['/api/(.*)'],
+    }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       load: [config],
@@ -43,18 +50,19 @@ import { TorrentInfoService } from './torrent-info/torrent-info.service';
       ignoreErrors: false,
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
-    TorrentsModule,
+    TypeOrmModule.forFeature([Torrent]),
   ],
-  controllers: [AppController, StreamarrController],
+  controllers: [AppController, TorrentsController, StreamarrController],
   providers: [
+    TorrentsService,
     AppService,
     useTorrentUtilProvider(),
     StreamarrService,
-    TorrentsFromFeedService,
+    JacketteTorrentSourceService,
     StreamarrFsService,
     useWebtorrentServiceProvider(config().STREAMARRFS_WEBTORRENT_TORRENT_PORT),
-    TorrentFromQueueService,
-    TorrentsFreeService,
+    TorrentIndexerService,
+    FreeTorrentFeedService,
     TorrentInfoService,
   ],
 })

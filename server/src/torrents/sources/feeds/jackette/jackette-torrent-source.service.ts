@@ -1,18 +1,20 @@
 import { ConfigService } from '@nestjs/config';
+import config from '../../../../config';
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import RssParser from 'rss-parser';
 
-import { TorrentsService } from '../torrents/torrents.service';
-import { FeedType, type Feed } from '../types';
-import { TorrentInfoStatus } from '../torrents/entities/torrent.entity';
+import { TorrentsService } from '../../../torrents.service';
+import { FeedType, type Feed } from '../../../../types';
+import { TorrentInfoStatus } from '../../../db/entities/torrent.entity';
 
 @Injectable()
-export class TorrentsFromFeedService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(TorrentsFromFeedService.name);
+export class JacketteTorrentSourceService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(JacketteTorrentSourceService.name);
   private isTaskRunning: boolean;
   private rssParser;
   private feeds;
+  private jobCronExpression;
 
   constructor(
     private readonly torrentService: TorrentsService,
@@ -23,17 +25,26 @@ export class TorrentsFromFeedService implements OnApplicationBootstrap {
         item: [['torznab:attr', 'torznabAttr']],
       },
     });
-    this.feeds = this.configService.get<Array<Feed>>('STREAMARRFS_FEEDS');
+    this.feeds = this.configService.get<Array<Feed>>(
+      'STREAMARRFS_JACKETTE_FEEDS',
+    );
+    this.jobCronExpression =
+      this.configService.get<string>(
+        'STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION',
+      ) || CronExpression.EVERY_HOUR;
   }
 
   async onApplicationBootstrap() {
-    this.torrentProducer();
+    this.runJob();
   }
 
-  @Cron(CronExpression.EVERY_HOUR, { name: TorrentsFromFeedService.name })
-  async torrentProducer() {
+  @Cron(config().STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION, {
+    name: JacketteTorrentSourceService.name,
+  })
+  async runJob() {
     if (
-      this.configService.get<string>('STREAMARRFS_FEED_DISABLED') === 'true'
+      this.configService.get<string>('STREAMARRFS_JACKETTE_FEED_DISABLED') ===
+      'true'
     ) {
       this.logger.verbose(`aborting feed is disabled`);
       return;

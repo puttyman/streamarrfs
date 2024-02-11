@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTorrentDto } from './dto/create-torrent.dto';
-import { UpdateTorrentDto } from './dto/update-torrent.dto';
+import { CreateTorrentDto } from './db/dto/create-torrent.dto';
+import { UpdateTorrentDto } from './db/dto/update-torrent.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Equal, Raw } from 'typeorm';
-import { Torrent, TorrentInfoStatus } from './entities/torrent.entity';
+import { Torrent, TorrentInfoStatus } from './db/entities/torrent.entity';
 
 @Injectable()
 export class TorrentsService {

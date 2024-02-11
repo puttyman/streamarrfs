@@ -1,4 +1,5 @@
 import type { LogLevel } from '@nestjs/common';
+import { CronExpression } from '@nestjs/schedule';
 import { Feed, FeedIndexer, FeedType } from './types';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -33,10 +34,11 @@ function getFeedIndexer(feedKey): FeedIndexer {
   return FeedIndexer.JACKETT;
 }
 
-const STREAMARRFS_FEEDS = Object.keys(process.env)
+const STREAMARRFS_JACKETTE_FEEDS = Object.keys(process.env)
   .filter((envName) =>
     envName.startsWith(
-      process.env.STREAMARRFS_FEED_URL_PREFIX || 'STREAMARRFS_FEED_URL_ITEM',
+      process.env.STREAMARRFS_JACKETT_FEED_URL_PREFIX ||
+        'STREAMARRFS_JACKETTE_FEED_URL_ITEM',
     ),
   )
   .map((feedKey) => {
@@ -79,6 +81,8 @@ export default () => {
       parseInt(process.env.STREAMARRFS_TORRENT_MAX_READY) || 2,
     STREAMARRFS_TORRENT_START_TIMEOUT:
       parseInt(process.env.STREAMARRFS_TORRENT_START_TIMEOUT) || 1000 * 60 * 2,
+    STREAMARRFS_TORRENT_INDEXER_CONCURRENCY:
+      process.env.STREAMARRFS_TORRENT_INDEXER_CONCURRENCY || 1,
 
     STREAMARRFS_WEBTORRENT_MAX_CONNS:
       parseInt(process.env.STREAMARRFS_WEBTORRENT_MAX_CONNS) || 55,
@@ -92,12 +96,15 @@ export default () => {
     STREAMARRFS_WEBTORRENT_TORRENT_PORT:
       parseInt(process.env.STREAMARRFS_WEBTORRENT_TORRENT_PORT) || 0,
 
-    STREAMARRFS_FEED_URL_PREFIX:
-      process.env.STREAMARRFS_FEED_URL_PREFIX ?? 'STREAMARRFS_FEED_URL_ITEM',
-    STREAMARRFS_FEED_DISABLED: process.env.STREAMARRFS_FEED_DISABLED ?? 'false',
-    STREAMARRFS_FEED_ADD_QUEUE_CONCURRENCY:
-      parseInt(process.env.STREAMARRFS_FEED_ADD_QUEUE_CONCURRENCY) || 5,
-    STREAMARRFS_FEEDS,
+    STREAMARRFS_JACKETT_FEED_URL_PREFIX:
+      process.env.STREAMARRFS_JACKETT_FEED_URL_PREFIX ??
+      'STREAMARRFS_JACKETTE_FEED_URL_ITEM',
+    STREAMARRFS_JACKETTE_FEED_DISABLED:
+      process.env.STREAMARRFS_JACKETTE_FEED_DISABLED ?? 'false',
+    STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION:
+      process.env.STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION ??
+      CronExpression.EVERY_HOUR,
+    STREAMARRFS_JACKETTE_FEEDS,
 
     STREAMARRFS_MOUNT_PATH:
       process.env.STREAMARRFS_MOUNT_PATH ?? '/tmp/streamarrfs-mnt',
