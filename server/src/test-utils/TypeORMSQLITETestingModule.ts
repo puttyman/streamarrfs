@@ -1,5 +1,5 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Torrent } from '../torrents/entities/torrent.entity';
+import { Torrent } from '../torrents/db/entities/torrent.entity';
 
 export const TypeOrmSQLITETestingModule = () => [
   TypeOrmModule.forRoot({

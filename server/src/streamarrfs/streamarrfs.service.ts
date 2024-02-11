@@ -442,7 +442,12 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
           return process.nextTick(cb, Fuse.EBUSY);
         }
 
-        const readableTorrent = await this.makeTorrentReadable(infoHash);
+        const readableTorrent = await this.makeTorrentReadable(
+          infoHash,
+          async (torrent: StreamarrFsTorrent) => {
+            this.notifyTorrentRead(torrent.infoHash);
+          },
+        );
 
         if (!readableTorrent) {
           // Just return busy error here. The user may retry/resume.
@@ -500,20 +505,27 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
    * Ensure the torrent is in ready state for every read.
    * - When torrent is ready and not paused return it.
    * - When torrent is paused resume it.
-   * - When torrent is not running it start it.
+   * - When torrent is not running it start it and return once ready
    * @param infoHash
+   * @param onTorrentReadable Callback when torrent is readable.
    * @returns torrent
    */
-  async makeTorrentReadable(infoHash): Promise<WebTorrent.Torrent | null> {
+  async makeTorrentReadable(
+    infoHash,
+    onTorrentReadable: (torrent: StreamarrFsTorrent) => Promise<void>,
+  ): Promise<StreamarrFsTorrent | null> {
+    let readableTorrent: StreamarrFsTorrent = null;
+
     const readyTorrent =
       await this.webtorrentService.findReadyAndUnpausedTorrent(infoHash);
     if (readyTorrent) {
-      return readyTorrent;
+      readableTorrent = readyTorrent;
     }
 
     const resumedTorrent = await this.webtorrentService.resumeTorrent(infoHash);
-
-    if (resumedTorrent) return readyTorrent;
+    if (resumedTorrent) {
+      readableTorrent = resumedTorrent;
+    }
 
     if (!resumedTorrent) {
       const torrentInfo = await this.torrentService.findOneByInfoHash(infoHash);
@@ -525,10 +537,11 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
           `torrent ${infoHash} not in client starting new torrent.`,
         );
         const startedTorrent =
-          await this.webtorrentService.startTorrentWithMagnetLink(
+          await this.webtorrentService.startTorrentWithTimeout(
+            infoHash,
             torrentInfo.magnetURI,
           );
-        return startedTorrent;
+        readableTorrent = startedTorrent;
       }
 
       if (torrentInClient && !torrentInClient.ready) {
@@ -552,13 +565,22 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
           );
           const readyTorrent =
             await this.webtorrentService.getTorrentWithInfoHash(infoHash);
-          return readyTorrent;
+          readableTorrent = readyTorrent;
         } catch (err) {
           this.logger.error(`ERROR while waiting for torrent ${infoHash}`);
           this.logger.error(err);
           return null;
         }
       }
+    }
+
+    try {
+      await onTorrentReadable(readableTorrent);
+      return readableTorrent;
+    } catch (err) {
+      this.logger.error(`ERROR making torrent readable ${infoHash}`);
+      this.logger.error(err);
+      return null;
     }
   }
 }

@@ -1,37 +1,45 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import PQueue from 'p-queue';
-import { TorrentsService } from '../torrents/torrents.service';
-import {
-  Torrent,
-  TorrentInfoStatus,
-} from '../torrents/entities/torrent.entity';
-import { TorrentUtil } from '../torrent-util/torrent.util';
-import { TorrentInfo } from '../types';
-import { TorrentInfoService } from '../torrent-info/torrent-info.service';
+import { TorrentsService } from '../torrents.service';
+import { Torrent, TorrentInfoStatus } from '../db/entities/torrent.entity';
+import { TorrentUtil } from '../../torrent-util/torrent.util';
+import { TorrentInfo } from '../../types';
+import { TorrentInfoService } from '../../torrent-info/torrent-info.service';
+import { ConfigService } from '@nestjs/config';
 
+/**
+ * TorrentIndexerService finds info of torrents such as infoHash and files content.
+ * Once there is enough info for torrent it is then updated to a READY state to be
+ * made visible to StreamarrFsService.
+ */
 @Injectable()
-export class TorrentFromQueueService {
-  private readonly logger = new Logger(TorrentFromQueueService.name);
+export class TorrentIndexerService {
+  private readonly logger = new Logger(TorrentIndexerService.name);
   private isQueueJobRunning = false;
   private isProcessingJobRunning = false;
   private queue: PQueue;
+  private concurrency: number;
 
   constructor(
     private readonly torrentsService: TorrentsService,
     private readonly torrentUtil: TorrentUtil,
     private readonly torrentInfoService: TorrentInfoService,
+    private readonly configService: ConfigService,
   ) {
-    this.queue = new PQueue({ concurrency: 5 });
+    this.concurrency = this.configService.get<number>(
+      'STREAMARRFS_TORRENT_INDEXER_CONCURRENCY',
+    );
+    this.queue = new PQueue({ concurrency: this.concurrency });
   }
 
-  @Cron(CronExpression.EVERY_SECOND, {
-    name: `${TorrentFromQueueService.name} - queueTorrent`,
+  @Cron(CronExpression.EVERY_10_SECONDS, {
+    name: `${TorrentIndexerService.name} - queueTorrent`,
     disabled: false,
   })
-  async queueTorrent() {
+  async queueNewTorrents() {
     const queuedTorrents = await this.torrentsService.queuedTorrents();
-    if (!this.isQueueJobRunning && queuedTorrents.length < 5) {
+    if (!this.isQueueJobRunning && queuedTorrents.length < this.concurrency) {
       this.isQueueJobRunning = true;
       // Move torrent from NEW to QUEUED status
       await this.torrentsService.popNewTorrent();
@@ -39,18 +47,20 @@ export class TorrentFromQueueService {
     this.isQueueJobRunning = false;
   }
 
-  @Cron(CronExpression.EVERY_SECOND, {
-    name: `${TorrentFromQueueService.name} - consumedQueuedTorrents`,
+  @Cron(CronExpression.EVERY_30_SECONDS, {
+    name: `${TorrentIndexerService.name} - consumedQueuedTorrents`,
     disabled: false,
   })
   async consumedQueuedTorrents() {
-    // if (this.isProcessingJobRunning !== false) return;
-    // if (this.isQueueBusy()) return;
-
     this.isProcessingJobRunning = true;
     const queuedTorrents = await this.torrentsService.queuedTorrents();
 
     for (const queuedTorrent of queuedTorrents) {
+      if (this.queue.pending >= this.concurrency) {
+        this.isProcessingJobRunning = false;
+        return;
+      }
+
       await this.torrentsService.updateTorrentStatus(
         queuedTorrent,
         TorrentInfoStatus.PROCESSING,
@@ -58,6 +68,10 @@ export class TorrentFromQueueService {
     }
 
     for (const queuedTorrent of queuedTorrents) {
+      if (this.queue.pending >= this.concurrency) {
+        this.isProcessingJobRunning = false;
+        return;
+      }
       await this.queue.add(() => this.indexTorrent(queuedTorrent));
     }
 
