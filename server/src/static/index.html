@@ -15,14 +15,16 @@
 
   <div class="container">
     <div class="stats">
-      <h1>Stats</h1>
+      <h1>streamarrfs</h1>
+      <h2>stats</h2>
 
       <div>
         <div id="sse" hx-ext="sse" sse-connect="/api/streamarrfs/sse">
           <!-- Data will be populated dynamically -->
-          <div id="sse2" sse-swap="message" hx-trigger="sse:message"></div>
+          <div id="sse2" sse-swap="message" style="display: none;"></div>
         </div>
-        <table id="torrentTable">
+        <h3>Streaming torrents</h3>
+        <table id="streamingTorrents">
           <thead>
             <tr>
               <th>Name</th>
@@ -35,7 +37,22 @@
             </tr>
           </thead>
           <tbody>
-
+          </tbody>
+        </table>
+        <h3>Indexing torrents</h3>
+        <table id="indexingTorrents">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Ready</th>
+              <th>Download Speed</th>
+              <th>Upload Speed</th>
+              <th>Downloaded</th>
+              <th>Paused</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
           </tbody>
         </table>
 
@@ -47,22 +64,18 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      var tableBody = document.getElementById('torrentTable').querySelector('tbody');
-
-      // Function to handle SSE updates
-      function handleSSEUpdate(event) {
-        var data = JSON.parse(event.data);
-        renderTorrents(data.torrents);
-      }
+      const streamingTableBody = document.getElementById('streamingTorrents').querySelector('tbody');
+      const indexingTableBody = document.getElementById('indexingTorrents').querySelector('tbody');
 
       // Listen for SSE updates
-      document.querySelector('#torrentTable').addEventListener('sse:message', function (event) {
-        console.log(`zzzzzzzzz`)
-        // event.target.addEventListener('message', handleSSEUpdate);
+      document.querySelector('#sse').addEventListener('htmx:sseMessage', function (event) {
+        const data = JSON.parse(event?.detail?.data || '[]');
+        renderTorrents(streamingTableBody, data.streamingTorrents);
+        renderTorrents(indexingTableBody, data.indexingTorrents);
       });
 
-      function renderTorrents(torrents) {
-        tableBody.innerHTML = ''; // Clear previous data
+      function renderTorrents(tBody, torrents) {
+        tBody.innerHTML = ''; // Clear previous data
         torrents.forEach(function (torrent) {
           var row = document.createElement('tr');
           row.innerHTML = `
@@ -74,7 +87,7 @@
                         <td>${torrent.paused}</td>
                         <td>${torrent.status}</td>
                     `;
-          tableBody.appendChild(row);
+          tBody.appendChild(row);
         });
       }
     });

@@ -29,4 +29,8 @@ export class TorrentInfoService implements OnModuleInit {
       await this.webTorrentService.getTorrentInfoFromMagnetURI(magnetURI);
     return torrentInfo;
   }
+
+  torrents() {
+    return this.webTorrentService.torrents();
+  }
 }
