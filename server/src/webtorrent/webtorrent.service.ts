@@ -430,7 +430,7 @@ export class WebTorrentService implements OnApplicationShutdown {
         this.logger.verbose(
           `pauseOrStopTorrents pausing ${streamarrfsTorrent.infoHash}`,
         );
-        streamarrfsTorrent.pause();
+        // streamarrfsTorrent.pause();
         streamarrfsTorrent.status = 'paused';
       }
 
