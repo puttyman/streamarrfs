@@ -129,4 +129,8 @@ export class TorrentsService {
   remove(id: number) {
     return this.torrentsRepository.delete({ id });
   }
+
+  removeByInfoHash(infoHash: string) {
+    return this.torrentsRepository.delete({ infoHash });
+  }
 }

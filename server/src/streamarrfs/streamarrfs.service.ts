@@ -36,6 +36,8 @@ export interface StreamarrFsTorrent extends WebTorrent.Torrent {
   activeReads?: number;
 }
 
+const DEFAULT_MOUNT_PATH = '/tmp/streamarrfs';
+
 @Injectable()
 export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   private readonly logger = new Logger(StreamarrFsService.name);
@@ -52,9 +54,9 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     this.torrentStartTimeout = this.configService.get<number>(
       'STREAMARRFS_TORRENT_START_TIMEOUT',
     );
-    this.streamarrFsMountPath = this.configService.get<string>(
-      'STREAMARRFS_MOUNT_PATH',
-    );
+    this.streamarrFsMountPath =
+      this.configService.get<string>('STREAMARRFS_MOUNT_PATH') ??
+      DEFAULT_MOUNT_PATH;
   }
 
   async onApplicationShutdown(signal?: string) {
@@ -87,18 +89,21 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         autoUnmount: this.configService.get<boolean>(
           'STREAMARRFS_FUSE_AUTO_UNMOUNT',
         ),
-        debug: this.configService.get<boolean>('STREAMARRFS_FUSE_DEBUG'),
-        timeout: this.configService.get<number>('STREAMARRFS_FUSE_TIMEOUT'),
-        nonEmpty: this.configService.get<boolean>('STREAMARRFS_FUSE_NON_EMPTY'),
-        allowOther: this.configService.get<boolean>(
-          'STREAMARRFS_FUSE_ALLOW_OTHER',
-        ),
-        allowRoot: this.configService.get<boolean>(
-          'STREAMARRFS_FUSE_ALLOW_ROOT',
-        ),
-        maxRead: this.configService.get<number>(
-          'STREAMARRFS_FUSE_ALLOW_MAX_READ',
-        ),
+        debug:
+          this.configService.get<boolean>('STREAMARRFS_FUSE_DEBUG') ?? false,
+        timeout:
+          this.configService.get<number>('STREAMARRFS_FUSE_TIMEOUT') ?? 120,
+        nonEmpty:
+          this.configService.get<boolean>('STREAMARRFS_FUSE_NON_EMPTY') ?? true,
+        allowOther:
+          this.configService.get<boolean>('STREAMARRFS_FUSE_ALLOW_OTHER') ??
+          true,
+        allowRoot:
+          this.configService.get<boolean>('STREAMARRFS_FUSE_ALLOW_ROOT') ??
+          false,
+        maxRead:
+          this.configService.get<number>('STREAMARRFS_FUSE_ALLOW_MAX_READ') ??
+          4096,
       },
     );
 
@@ -277,7 +282,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         return process.nextTick(cb, Fuse.ENOENT);
       }
     } catch (err) {
-      this.logger.error(`Error 'readdir'`, path);
+      this.logger.error(`ERROR 'readdir'`, path);
       this.logger.error(err);
       return process.nextTick(cb, Fuse.EIO);
     }
@@ -362,7 +367,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         }
       }
     } catch (err) {
-      this.logger.error(`Error 'getattr'`, path);
+      this.logger.error(`ERROR 'getattr'`, path);
       this.logger.error(err);
       return process.nextTick(cb, Fuse.EIO);
     }
@@ -400,7 +405,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         return process.nextTick(cb, Fuse.ENOENT);
       }
     } catch (err) {
-      this.logger.error(`Error 'open'`, path);
+      this.logger.error(`ERROR 'open'`, path);
       this.logger.error(err);
       return process.nextTick(cb, Fuse.EIO);
     }
@@ -419,7 +424,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
       return process.nextTick(cb, Fuse.ENOENT);
     } catch (err) {
-      this.logger.error(`Error 'realease'`, path);
+      this.logger.error(`ERROR 'realease'`, path);
       this.logger.error(err);
       return process.nextTick(cb, Fuse.EIO);
     }

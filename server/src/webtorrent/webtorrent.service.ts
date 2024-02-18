@@ -430,6 +430,11 @@ export class WebTorrentService implements OnApplicationShutdown {
         this.logger.verbose(
           `pauseOrStopTorrents pausing ${streamarrfsTorrent.infoHash}`,
         );
+        /**
+         * TODO: Fix reading from paused torrent.
+         * When torrent is paused it seems webtorrent may crash
+         * if there is a read to any file in the torrent.
+         */
         // streamarrfsTorrent.pause();
         streamarrfsTorrent.status = 'paused';
       }

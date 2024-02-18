@@ -1,4 +1,4 @@
-# streamarrfs (experimental)
+# Streamarrfs (experimental)
 
 Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [⚡️ webtorrent](https://github.com/webtorrent/webtorrent).
 
@@ -11,13 +11,13 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [�
 
 ## Features
 - Monitors torrents that are not being streamed and stop them.
-- Automatically paused torrents if no read activity detected.
+- Automatically paused followed to a stop of torrents if no read activity detected.
 - Polls feed(s) on desired frequency.
 - Ability to seek through video while streaming.
 - File system can be mounted for other usage e.g. nginx as a file server.
-- Handles torrent duplicates from multiple feeds
+- Handles torrent duplicates from multiple feeds.
 
-### Supported Indexer
+### Supported Indexes
   - [Jackett](https://github.com/Jackett/Jackett)
 
 ## Setup instructions - Plex
@@ -44,7 +44,7 @@ At the present this project only supports running as a docker image and on a amd
 
     apt update && apt install docker.io
 
-  4. Create a directory where the torrents will be mounted (vitual)
+  4. Create a directory where the torrents will be mounted
   
     mkdir /tmp/streamarrfs
   
@@ -103,8 +103,8 @@ Given project is experimental and if successful it will be implemented. PR welco
 - The torrent does not have enough peers.
 - The torrent has timed-out to be in readable state.
 - Plex is currently indexing the library and may cause torrents to start.
-- Your server does not have enough RAM. At least 4gb is recommended due to [webtorrent issue](https://github.com/webtorrent/webtorrent/issues/1973)
-- The video your are trying to stream have multiple versions. e.g. movie.1080p.mp4 movie.2160p.mp4 
+- Your server does not have enough RAM. Your allocated RAM should be more than the size of the video being streamed. See [webtorrent issue](https://github.com/webtorrent/webtorrent/issues/1973)
+- The video your are trying to stream have multiple versions. e.g. movie.1080p.mp4 movie.2160p.mp4.
 
 ##### Solutions & Workarounds
  - Simply retry playing the video until it works.

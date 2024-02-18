@@ -1,0 +1,26 @@
+name: Unit test
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*.*.*"
+  pull_request:
+    branches:
+      - "master"
+
+jobs:
+  unit_test:
+    name: Unit test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: docker/build.Dockerfile
+          target: prod
+          push: false
