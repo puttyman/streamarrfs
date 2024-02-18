@@ -32,7 +32,7 @@ jobs:
         run: |
           cd docker/compose
           mkdir ${{ runner.temp }}/streamarrfs
-          docker-compose run -e STREAMARRFS_MOUNT_PATH=${{ runner.temp }}/streamarrfs streamarrfs-test
+          docker-compose run -v ${{ runner.temp }}:/tmp streamarrfs-test
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
