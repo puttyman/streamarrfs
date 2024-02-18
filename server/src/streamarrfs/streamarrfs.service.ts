@@ -61,8 +61,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   async onApplicationShutdown(signal?: string) {
     this.logger.log(`onApplicationShutdown signal=${signal} started`);
-    await this.unmountFs();
     await this.wipeAndRecreateMountedPath();
+    await this.unmountFs();
     this.logger.log(`onApplicationShutdown signal=${signal} completed`);
   }
 
