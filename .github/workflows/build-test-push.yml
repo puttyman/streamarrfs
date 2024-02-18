@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           sudo mkdir /tmp/streamarrfs
-          ls mkdir /tmp/streamarrfs
+          sudo ls /tmp/streamarrfs
           cd server
           npm ci
           sudo npm run test
