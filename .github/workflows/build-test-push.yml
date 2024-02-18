@@ -21,30 +21,21 @@ jobs:
         shell: bash
         run: |
           sudo apt update
+          sudo modprobe fuse
+          sudo chmod 666 /dev/fuse
+          sudo chown root:$USER /etc/fuse.conf
           sudo apt install fuse libfuse2 libfuse-dev -y
-      - name: Install node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 21
+      - name: Build test image
+        shell: bash
+        run: |
+          cd docker/compose
+          docker-compose build streamarrfs-test
       - name: Run unit test
         shell: bash
         run: |
-          mkdir /tmp/streamarrfs
-          ls /tmp/streamarrfs
-          cd server
-          npm ci
-          npm run test
-      # - name: Build test image
-      #   shell: bash
-      #   run: |
-      #     cd docker/compose
-      #     docker-compose build streamarrfs-test
-      # - name: Run unit test
-      #   shell: bash
-      #   run: |
-      #     cd docker/compose
-      #     mkdir ${{ runner.temp }}/streamarrfs
-      #     docker-compose run -v ${{ runner.temp }}:/tmp streamarrfs-test
+          cd docker/compose
+          mkdir ${{ runner.temp }}/streamarrfs
+          docker-compose run -v ${{ runner.temp }}:/tmp streamarrfs-test
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
