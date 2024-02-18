@@ -25,6 +25,7 @@ jobs:
       - name: Run unit test
         shell: bash
         run: |
+          cd docker/compose
           docker-compose run streamarrfs-test
       - name: Docker meta
         id: meta
