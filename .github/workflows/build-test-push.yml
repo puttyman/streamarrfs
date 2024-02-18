@@ -26,7 +26,8 @@ jobs:
         shell: bash
         run: |
           cd docker/compose
-          docker-compose run streamarrfs-test
+          mkdir ${{ runner.temp }}/streamarrfs
+          docker-compose run -e STREAMARRFS_MOUNT_PATH=${{ runner.temp }}/streamarrfs streamarrfs-test
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
