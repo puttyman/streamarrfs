@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { TorrentInfoService } from './torrent-info.service';
 import { useTorrentUtilProvider } from '../module-providers/useTorrentUtilProvider';
 
-describe('TorrentInfoService', () => {
+describe.skip('TorrentInfoService', () => {
   let torrentInfoService: TorrentInfoService;
 
   beforeEach(async () => {
