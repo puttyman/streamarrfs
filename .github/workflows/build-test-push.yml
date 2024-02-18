@@ -1,4 +1,4 @@
-name: Build and Push Docker image to Docker Hub
+name: Build, Test and Push Docker image to Docker Hub
 
 on:
   push:
@@ -12,11 +12,30 @@ on:
 
 jobs:
   push_to_registry:
-    name: Push Docker image to Docker Hub
-    runs-on: ubuntu-latest
+    name: Build, Test and Push Docker image to Docker Hub
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Install libfuse
+        shell: bash
+        run: |
+          sudo apt update
+          sudo modprobe fuse
+          sudo chmod 666 /dev/fuse
+          sudo chown root:$USER /etc/fuse.conf
+          sudo apt install fuse libfuse2 libfuse-dev -y
+      - name: Build test image
+        shell: bash
+        run: |
+          cd docker/compose
+          docker-compose build streamarrfs-test
+      - name: Run unit test
+        shell: bash
+        run: |
+          cd docker/compose
+          sudo mkdir /tmp/streamarrfs
+          sudo docker-compose run -v /tmp:/tmp streamarrfs-test
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5

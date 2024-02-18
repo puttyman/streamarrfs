@@ -7,7 +7,7 @@ export class CreateTorrentDto {
   files?: string;
   magnetURI?: string;
   isVisible: boolean;
-  status?: TorrentInfoStatus;
+  status: TorrentInfoStatus;
   errors?: string;
   lastStartedAt?: Date;
 }
