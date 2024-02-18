@@ -36,7 +36,7 @@ export interface StreamarrFsTorrent extends WebTorrent.Torrent {
   activeReads?: number;
 }
 
-const DEFAULT_MOUNT_PATH = '/tmp/streamarrfs';
+export const DEFAULT_MOUNT_PATH = '/tmp/streamarrfs';
 
 @Injectable()
 export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
@@ -61,8 +61,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   async onApplicationShutdown(signal?: string) {
     this.logger.log(`onApplicationShutdown signal=${signal} started`);
-    await this.wipeAndRecreateMountedPath();
     await this.unmountFs();
+    await this.wipeAndRecreateMountedPath();
     this.logger.log(`onApplicationShutdown signal=${signal} completed`);
   }
 
@@ -112,7 +112,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   private async unmountFs() {
     const pUnmount = new Promise((resolve, reject) => {
-      Fuse.unmount(this.getMountPath(), (err) => {
+      this.fuseInstance.unmount((err) => {
         if (err) reject(err);
 
         resolve(true);

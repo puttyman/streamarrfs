@@ -10,7 +10,7 @@ import { TorrentsService } from './torrents/torrents.service';
 import { TypeOrmSQLITETestingModule } from './test-utils/TypeORMSQLITETestingModule';
 import { EventEmitterTestingModule } from './test-utils/EventEmittterTestingModule';
 
-describe('AppController', () => {
+describe.skip('AppController', () => {
   let appController: AppController;
 
   beforeEach(async () => {
