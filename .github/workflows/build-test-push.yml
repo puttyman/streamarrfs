@@ -29,9 +29,10 @@ jobs:
       - name: Run unit test
         shell: bash
         run: |
+          mkdir ${{ runner.temp }}/streamarrfs
           cd server
           npm ci
-          npm run test
+          STREAMARRFS_MOUNT_PATH=${{ runner.temp }}/streamarrfs npm run test
       # - name: Build test image
       #   shell: bash
       #   run: |
