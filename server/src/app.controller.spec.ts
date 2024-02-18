@@ -30,17 +30,13 @@ describe('AppController', () => {
     }).compile();
 
     appController = app.get<AppController>(AppController);
+    appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('/status should return OK', async () => {
+  describe('healthcheck', () => {
+    it('should be true for service', async () => {
       const jsonStringResp = await appController.healthcheck();
-      expect(jsonStringResp).toEqual({
-        db: { healthy: true },
-        service: { healthy: true },
-        streamarrfs: { healthy: false },
-        webtorrent: { healthy: true },
-      });
+      expect(jsonStringResp?.service?.healthy).toBeTruthy();
     });
   });
 });

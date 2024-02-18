@@ -16,6 +16,7 @@ import { torrentMultipleFiles } from './fixtures/torrent-multiple-files';
 import { torrentNotVisible } from './fixtures/torrent-not-visibile';
 
 describe('StreamarrFsService', () => {
+  const mountPath = process.env.STREAMARRFS_MOUNT_PATH ?? '/tmp/streamarrfs';
   let streamarrFsService: StreamarrFsService;
   let torrentService: TorrentsService;
 
@@ -23,8 +24,8 @@ describe('StreamarrFsService', () => {
 
   beforeAll(async () => {
     try {
-      execSync('fusermount -u -z /tmp/streamarrfs');
-      await fs.rm('/tmp/streamarrfs', { recursive: true, force: true });
+      execSync(`fusermount -u -z ${mountPath}`);
+      await fs.rm(mountPath, { recursive: true, force: true });
     } catch (err) {}
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -54,7 +55,7 @@ describe('StreamarrFsService', () => {
 
   describe('when mounted', () => {
     it('should have an empty directory', async () => {
-      const rootDir = await fs.readdir('/tmp/streamarrfs');
+      const rootDir = await fs.readdir(mountPath);
       expect(rootDir).toHaveLength(0);
     });
   });
@@ -62,7 +63,7 @@ describe('StreamarrFsService', () => {
   describe('when torrent(s) are added', () => {
     it('should have the torrent directory in mounted path', async () => {
       await torrentService.create(torrentSingleFile);
-      const rootDir = await fs.readdir('/tmp/streamarrfs');
+      const rootDir = await fs.readdir(mountPath);
       expect(rootDir).toHaveLength(1);
       expect(rootDir).toEqual([torrentSingleFile.infoHash]);
       await torrentService.removeByInfoHash(torrentSingleFile.infoHash);
@@ -71,7 +72,7 @@ describe('StreamarrFsService', () => {
     it('should have multiples torrent directories in mounted path', async () => {
       await torrentService.create(torrentSingleFile);
       await torrentService.create(torrentMultipleFiles);
-      const rootDir = await fs.readdir('/tmp/streamarrfs');
+      const rootDir = await fs.readdir(mountPath);
       expect(rootDir).toHaveLength(2);
       expect(rootDir).toEqual([
         torrentSingleFile.infoHash,
@@ -84,7 +85,7 @@ describe('StreamarrFsService', () => {
     it('should not show non visibile torrents', async () => {
       await torrentService.create(torrentSingleFile);
       await torrentService.create(torrentNotVisible);
-      const rootDir = await fs.readdir('/tmp/streamarrfs');
+      const rootDir = await fs.readdir(mountPath);
       expect(rootDir).toHaveLength(1);
       expect(rootDir).toEqual([torrentSingleFile.infoHash]);
       await torrentService.removeByInfoHash(torrentSingleFile.infoHash);
@@ -101,7 +102,7 @@ describe('StreamarrFsService', () => {
     });
     it('should have one dir', async () => {
       const torrentRoot = await fs.readdir(
-        '/tmp/streamarrfs/58ae7abc1d9e50d85f26dc376ef439b4a1fb5228',
+        `${mountPath}/58ae7abc1d9e50d85f26dc376ef439b4a1fb5228`,
       );
       expect(torrentRoot).toHaveLength(1);
       expect(torrentRoot[0]).toEqual('dir');
@@ -109,7 +110,7 @@ describe('StreamarrFsService', () => {
 
     it('should have 3 files in dir', async () => {
       const torrentDir = await fs.readdir(
-        '/tmp/streamarrfs/58ae7abc1d9e50d85f26dc376ef439b4a1fb5228/dir',
+        `${mountPath}/58ae7abc1d9e50d85f26dc376ef439b4a1fb5228/dir`,
       );
       expect(torrentDir).toHaveLength(3);
       expect(torrentDir).toEqual(['image.jpg', 'text.txt', 'video.mp4']);
@@ -117,7 +118,7 @@ describe('StreamarrFsService', () => {
 
     it('should return correct length for video', async () => {
       const fileStat = await fs.stat(
-        '/tmp/streamarrfs/58ae7abc1d9e50d85f26dc376ef439b4a1fb5228/dir/video.mp4',
+        `${mountPath}/58ae7abc1d9e50d85f26dc376ef439b4a1fb5228/dir/video.mp4`,
       );
       expect(fileStat.size).toEqual(111111111);
     });
@@ -132,7 +133,7 @@ describe('StreamarrFsService', () => {
     });
     it('should have one file only', async () => {
       const torrentRoot = await fs.readdir(
-        '/tmp/streamarrfs/1111111111111111111111111111111111111111',
+        `${mountPath}/1111111111111111111111111111111111111111`,
       );
       expect(torrentRoot).toHaveLength(1);
       expect(torrentRoot[0]).toEqual('singlefile.mp4');
