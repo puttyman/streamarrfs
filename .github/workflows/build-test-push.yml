@@ -29,11 +29,11 @@ jobs:
       - name: Run unit test
         shell: bash
         run: |
-          sudo mkdir /tmp/streamarrfs
-          sudo ls /tmp/streamarrfs
+          mkdir /tmp/streamarrfs
+          ls /tmp/streamarrfs
           cd server
           npm ci
-          sudo npm run test
+          npm run test
       # - name: Build test image
       #   shell: bash
       #   run: |
