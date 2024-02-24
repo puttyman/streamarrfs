@@ -89,21 +89,18 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         autoUnmount: this.configService.get<boolean>(
           'STREAMARRFS_FUSE_AUTO_UNMOUNT',
         ),
-        debug:
-          this.configService.get<boolean>('STREAMARRFS_FUSE_DEBUG') ?? false,
-        timeout:
-          this.configService.get<number>('STREAMARRFS_FUSE_TIMEOUT') ?? 120,
-        nonEmpty:
-          this.configService.get<boolean>('STREAMARRFS_FUSE_NON_EMPTY') ?? true,
-        allowOther:
-          this.configService.get<boolean>('STREAMARRFS_FUSE_ALLOW_OTHER') ??
-          true,
-        allowRoot:
-          this.configService.get<boolean>('STREAMARRFS_FUSE_ALLOW_ROOT') ??
-          false,
-        maxRead:
-          this.configService.get<number>('STREAMARRFS_FUSE_ALLOW_MAX_READ') ??
-          4096,
+        debug: this.configService.get<boolean>('STREAMARRFS_FUSE_DEBUG'),
+        timeout: this.configService.get<number>('STREAMARRFS_FUSE_TIMEOUT'),
+        nonEmpty: this.configService.get<boolean>('STREAMARRFS_FUSE_NON_EMPTY'),
+        allowOther: this.configService.get<boolean>(
+          'STREAMARRFS_FUSE_ALLOW_OTHER',
+        ),
+        allowRoot: this.configService.get<boolean>(
+          'STREAMARRFS_FUSE_ALLOW_ROOT',
+        ),
+        maxRead: this.configService.get<number>(
+          'STREAMARRFS_FUSE_ALLOW_MAX_READ',
+        ),
       },
     );
 
