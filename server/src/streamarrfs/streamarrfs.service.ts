@@ -245,7 +245,11 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         const rootDirInfo =
           await this.torrentService.visibleTorrentsRootIndex();
         const hashFolders = rootDirInfo.map((torrent) => torrent.infoHash);
-        return process.nextTick(cb, 0, hashFolders);
+        return process.nextTick(cb, 0, ['healthcheck', ...hashFolders]);
+      }
+
+      if (path === '/healthcheck') {
+        return process.nextTick(cb, 0, []);
       }
 
       // In torrent
@@ -298,6 +302,10 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
           null,
           this.stat({ mode: 'dir', size: dirSize }),
         );
+      }
+
+      if (path === '/healthcheck') {
+        return process.nextTick(cb, null, this.stat({ mode: 'dir', size: 1 }));
       }
 
       // If a path to a torrent

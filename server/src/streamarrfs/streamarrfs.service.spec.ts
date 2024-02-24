@@ -50,9 +50,10 @@ describe('StreamarrFsService', () => {
   });
 
   describe('when mounted', () => {
-    it('should have an empty directory', async () => {
+    it('should have a healthcheck directory', async () => {
       const rootDir = await fs.readdir(mountPath);
-      expect(rootDir).toHaveLength(0);
+      expect(rootDir).toHaveLength(1);
+      expect(rootDir).toContain('healthcheck');
     });
   });
 
@@ -60,8 +61,9 @@ describe('StreamarrFsService', () => {
     it('should have the torrent directory in mounted path', async () => {
       await torrentService.create(torrentSingleFile);
       const rootDir = await fs.readdir(mountPath);
-      expect(rootDir).toHaveLength(1);
-      expect(rootDir).toEqual([torrentSingleFile.infoHash]);
+      expect(rootDir).toHaveLength(2);
+      expect(rootDir).toContain('healthcheck');
+      expect(rootDir).toContain(torrentSingleFile.infoHash);
       await torrentService.removeByInfoHash(torrentSingleFile.infoHash);
     });
 
@@ -69,11 +71,10 @@ describe('StreamarrFsService', () => {
       await torrentService.create(torrentSingleFile);
       await torrentService.create(torrentMultipleFiles);
       const rootDir = await fs.readdir(mountPath);
-      expect(rootDir).toHaveLength(2);
-      expect(rootDir).toEqual([
-        torrentSingleFile.infoHash,
-        torrentMultipleFiles.infoHash,
-      ]);
+      expect(rootDir).toHaveLength(3);
+      expect(rootDir).toContain('healthcheck');
+      expect(rootDir).toContain(torrentSingleFile.infoHash);
+      expect(rootDir).toContain(torrentMultipleFiles.infoHash);
       await torrentService.removeByInfoHash(torrentSingleFile.infoHash);
       await torrentService.removeByInfoHash(torrentMultipleFiles.infoHash);
     });
@@ -82,8 +83,9 @@ describe('StreamarrFsService', () => {
       await torrentService.create(torrentSingleFile);
       await torrentService.create(torrentNotVisible);
       const rootDir = await fs.readdir(mountPath);
-      expect(rootDir).toHaveLength(1);
-      expect(rootDir).toEqual([torrentSingleFile.infoHash]);
+      expect(rootDir).toHaveLength(2);
+      expect(rootDir).toContain('healthcheck');
+      expect(rootDir).toContain(torrentSingleFile.infoHash);
       await torrentService.removeByInfoHash(torrentSingleFile.infoHash);
       await torrentService.removeByInfoHash(torrentNotVisible.infoHash);
     });
