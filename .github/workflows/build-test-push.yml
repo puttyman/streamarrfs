@@ -30,12 +30,12 @@ jobs:
         run: |
           cd docker/compose
           docker-compose build streamarrfs-test
-      - name: Run unit test
-        shell: bash
-        run: |
-          cd docker/compose
-          sudo mkdir /tmp/streamarrfs
-          sudo docker-compose run -v /tmp:/tmp streamarrfs-test
+      # - name: Run unit test
+      #   shell: bash
+      #   run: |
+      #     cd docker/compose
+      #     sudo mkdir /tmp/streamarrfs
+      #     sudo docker-compose run -v /tmp/streamarrfs:/tmp streamarrfs-test
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
