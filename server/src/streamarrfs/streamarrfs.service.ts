@@ -109,10 +109,16 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   private async unmountFs() {
     const pUnmount = new Promise((resolve, reject) => {
-      Fuse.unmount(this.getMountPath(), (err) => {
-        if (err) reject(err);
+      this.fuseInstance.unmount((err) => {
+        if (err) {
+          return reject(err);
+        }
 
-        resolve(true);
+        Fuse.unmount(this.getMountPath(), (err) => {
+          if (!err) return reject(err);
+
+          return resolve(true);
+        });
       });
     });
     try {
