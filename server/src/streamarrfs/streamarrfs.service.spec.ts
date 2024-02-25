@@ -139,6 +139,13 @@ describe('StreamarrFsService', () => {
   });
 
   afterAll(async () => {
-    await streamarrFsService.onApplicationShutdown();
+    await streamarrFsService._unmountFuseInstance();
+
+    /**
+     * TODO: Investigate why this behaves strangely.
+     * When the FS is unmounted with just Fuse.unmount
+     * unit-test will hang due to ungracefully teardown.
+     */
+    //await streamarrFsService.onApplicationShutdown();
   });
 });

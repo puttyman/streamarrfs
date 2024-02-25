@@ -107,20 +107,30 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     await this.mountFs();
   }
 
+  /**
+   * Only used in unit test for workaround.
+   */
+  public async _unmountFuseInstance() {
+    const pUnmountInstance = new Promise((resolve, reject) => {
+      this.fuseInstance.unmount((err) => {
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve(true);
+      });
+    });
+
+    try {
+      await pUnmountInstance;
+    } catch (err) {
+      this.logger.error(`ERROR unmounting by instance ${this.getMountPath()}`);
+      this.logger.error(err);
+    }
+  }
+
   private async unmountFs() {
     const pUnmount = new Promise((resolve, reject) => {
-      // this.fuseInstance.unmount((err) => {
-      //   if (err) {
-      //     return reject(err);
-      //   }
-
-      //   Fuse.unmount(this.getMountPath(), (err) => {
-      //     if (!err) return reject(err);
-
-      //     return resolve(true);
-      //   });
-      // });
-
       Fuse.unmount(this.getMountPath(), (err) => {
         if (!err) return reject(err);
 
