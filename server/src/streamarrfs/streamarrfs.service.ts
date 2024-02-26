@@ -61,8 +61,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
 
   async onApplicationShutdown(signal?: string) {
     this.logger.log(`onApplicationShutdown signal=${signal} started`);
-    await this.wipeAndRecreateMountedPath();
     await this.unmountFs();
+    await this.wipeAndRecreateMountedPath();
     this.logger.log(`onApplicationShutdown signal=${signal} completed`);
   }
 
@@ -107,12 +107,34 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     await this.mountFs();
   }
 
+  /**
+   * Only used in unit test for workaround.
+   */
+  public async _unmountFuseInstance() {
+    const pUnmountInstance = new Promise((resolve, reject) => {
+      this.fuseInstance.unmount((err) => {
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve(true);
+      });
+    });
+
+    try {
+      await pUnmountInstance;
+    } catch (err) {
+      this.logger.error(`ERROR unmounting by instance ${this.getMountPath()}`);
+      this.logger.error(err);
+    }
+  }
+
   private async unmountFs() {
     const pUnmount = new Promise((resolve, reject) => {
-      this.fuseInstance.unmount((err) => {
-        if (err) reject(err);
+      Fuse.unmount(this.getMountPath(), (err) => {
+        if (!err) return reject(err);
 
-        resolve(true);
+        return resolve(true);
       });
     });
     try {
@@ -245,7 +267,11 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         const rootDirInfo =
           await this.torrentService.visibleTorrentsRootIndex();
         const hashFolders = rootDirInfo.map((torrent) => torrent.infoHash);
-        return process.nextTick(cb, 0, hashFolders);
+        return process.nextTick(cb, 0, ['healthcheck', ...hashFolders]);
+      }
+
+      if (path === '/healthcheck') {
+        return process.nextTick(cb, 0, []);
       }
 
       // In torrent
@@ -298,6 +324,10 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
           null,
           this.stat({ mode: 'dir', size: dirSize }),
         );
+      }
+
+      if (path === '/healthcheck') {
+        return process.nextTick(cb, null, this.stat({ mode: 'dir', size: 1 }));
       }
 
       // If a path to a torrent

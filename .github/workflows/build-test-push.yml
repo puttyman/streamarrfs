@@ -35,7 +35,7 @@ jobs:
         run: |
           cd docker/compose
           sudo mkdir /tmp/streamarrfs
-          sudo docker-compose run -v /tmp:/tmp streamarrfs-test
+          sudo docker-compose run -v /tmp/streamarrfs:/tmp streamarrfs-test
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
