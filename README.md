@@ -65,11 +65,25 @@ TODO
 
 ## Development
 
+### Linux/WSL (Ubuntu 22 LTS) dependencies
+  1. Install libfuse
+
+    apt update
+    apt install fuse libfuse2 libfuse-dev -y
+
+### OSX
+  1. Install osxfuse
+
+    brew install --cask osxfuse
+  
+  2. Alternatively install the .dmg from their [github releases](https://github.com/osxfuse/osxfuse/releases).
+
 ### Getting started
 
   1. From project root `cd server && npm i`
-  2. Init database `npm run migration:run`
-  2. Run dev `npm run start:dev`
+  2. Init database `npm run build`
+  3. Init database `npm run migration:run`
+  4. Run dev `npm run start:dev`
 
 ### Database changes & migrations
 
