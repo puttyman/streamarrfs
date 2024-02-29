@@ -4,8 +4,8 @@ import { TorrentsService } from '../../torrents.service';
 import { TorrentInfoService } from '../../../torrent-info/torrent-info.service';
 import { TorrentInfoStatus } from '../../db/entities/torrent.entity';
 @Injectable()
-export class FreeTorrentFeedService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(FreeTorrentFeedService.name);
+export class FreeTorrentSourceService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(FreeTorrentSourceService.name);
 
   private readonly freeMagnetLinks = {
     bigBuckBunny:
@@ -28,7 +28,7 @@ export class FreeTorrentFeedService implements OnApplicationBootstrap {
     const shouldAddFreeTorrents = this.configService.get<boolean>(
       'STREAMARRFS_ADD_FREE_TORRENTS',
     );
-    if (shouldAddFreeTorrents) {
+    if (!shouldAddFreeTorrents) {
       this.logger.verbose(`Skipping adding free torrents`);
       return;
     }
@@ -48,7 +48,7 @@ export class FreeTorrentFeedService implements OnApplicationBootstrap {
             name,
             files: JSON.stringify(files, null, 0),
             status: TorrentInfoStatus.READY,
-            isVisible: false,
+            isVisible: true,
             feedGuid: infoHash,
             feedURL: `free-${infoHash}`,
           });
