@@ -13,7 +13,8 @@ import { torrentMultipleFiles } from './fixtures/torrent-multiple-files';
 import { torrentNotVisible } from './fixtures/torrent-not-visibile';
 
 describe('StreamarrFsService', () => {
-  const mountPath = process.env.STREAMARRFS_MOUNT_PATH ?? '/tmp/streamarrfs';
+  const mountPath =
+    process.env.STREAMARRFS_MOUNT_PATH ?? '/tmp/streamarrfs-mnt';
   let streamarrFsService: StreamarrFsService;
   let torrentService: TorrentsService;
 
