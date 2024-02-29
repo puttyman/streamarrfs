@@ -1,56 +1,65 @@
 version: '3'
 services:
-    plex:
-        image: plexinc/pms-docker
-        depends_on: 
-          streamarrfs:
-            condition: service_healthy
-            restart: true
-        network_mode: host
-        volumes:
-            - streamarrfs-plex-config:/config
-            - streamarrfs-plex-transcode:/transcode
-            - /tmp/streamarrfs/streamarrfs:/data:ro
-        environment:
-            PLEX_CLAIM: 'claim-XXXXXXXXXXXXXXXX'
-        logging:
-            driver: json-file
-            options:
-                max-size: 10m
+  plex:
+    image: plexinc/pms-docker
+    network_mode: host
+    restart: always
+    depends_on:
+      streamarrfs:
+        condition: service_healthy
+        restart: true
+    healthcheck:
+      test: ["CMD", "ls", "-d", "/streamarrfs/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+    volumes:
+        - streamarrfs-plex-config:/config
+        - streamarrfs-plex-transcode:/transcode
+        - /tmp/streamarrfstmp/streamarrfs:/streamarrfs:ro
+    #environment:
+        #TZ: 'Australia/Melbourne'
+        #PLEX_CLAIM: 'claim-XXXXXjaNF4Y7CW5Agy9'
+        #ALLOWED_NETWORKS: '10.0.0.0/24'
+    logging:
+        driver: json-file
+        options:
+            max-size: 10m
 
-    streamarrfs:
-      image: puttyman/streamarrfs:master
-      network_mode: host
-      environment:
-        - NODE_ENV=development
-        - STREAMARRFS_FEED_URL_ITEM_2=http://10.0.0.100:9117/api/v2.0/indexers/yts/results/torznab/api?apikey=ryaz13l0u158v140x39zroy72lw1ke8i&t=search&cat=100044&q=2023
-      cap_add:
-        - SYS_ADMIN
-      devices:
-        - /dev/fuse
-      security_opt:
-        - apparmor=unconfined
-      volumes:
-        - streamarrfs-db:/db
-        - streamarrfs-downloads:/downloads
-        - /tmp/streamarrfs:/tmp:shared
-      command: npm run start:prod
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
-        start_period: 30s   
-      deploy:
-        resources:
-          limits:
-            memory: 4096M
-          reservations:
-            memory: 2048M
+  streamarrfs:
+    image: puttyman/streamarrfs:master
+    network_mode: host
+    environment:
+      - NODE_ENV=production
+      - STREAMARRFS_WEBTORRENT_DOWNLOAD_PATH=/downloads
+      - STREAMARRFS_MOUNT_PATH=/tmp/streamarrfs
+      - STREAMARRFS_FUSE_AUTO_UNMOUNT=true
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor=unconfined
+    volumes:
+      - streamarrfs-db:/server/db
+      - streamarrfs-downloads:/downloads
+      - /tmp/streamarrfs-tmp:/tmp:shared
+    healthcheck:
+      test: ["CMD", "ls", "-d", "/tmp/streamarrfs/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      # Note only resouces is allowed by docker compose. Others are ignored
+      resources:
+        limits:
+          memory: 8196M
+        reservations:
+          memory: 2048M
 
 volumes:
   streamarrfs-plex-config:
   streamarrfs-plex-transcode:
   streamarrfs-downloads:
-  streamarrfs-mnt:
   streamarrfs-db:

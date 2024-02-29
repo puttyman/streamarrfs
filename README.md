@@ -34,7 +34,7 @@ At the present this project only supports running as a docker image and on a amd
 
   1. Make sure your server has the fuse at `/dev/fuse`.
 
-    cat /dev/fuse
+    ls /dev/fuse
 
   2. SSH as root with command:
   
@@ -42,7 +42,7 @@ At the present this project only supports running as a docker image and on a amd
   
   3. Install docker engine & docker compose (you may skip if you already have docker and compose)
 
-    apt update && apt install docker.io
+    apt update && apt install docker.io && apt install docker-compose
 
   4. Create a directory where the torrents will be mounted
   

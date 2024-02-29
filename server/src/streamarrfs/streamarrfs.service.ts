@@ -35,9 +35,6 @@ export interface StreamarrFsTorrent extends WebTorrent.Torrent {
   lastReadDate: number;
   activeReads?: number;
 }
-
-export const DEFAULT_MOUNT_PATH = '/tmp/streamarrfs';
-
 @Injectable()
 export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   private readonly logger = new Logger(StreamarrFsService.name);
@@ -54,9 +51,9 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     this.torrentStartTimeout = this.configService.get<number>(
       'STREAMARRFS_TORRENT_START_TIMEOUT',
     );
-    this.streamarrFsMountPath =
-      this.configService.get<string>('STREAMARRFS_MOUNT_PATH') ??
-      DEFAULT_MOUNT_PATH;
+    this.streamarrFsMountPath = this.configService.get<string>(
+      'STREAMARRFS_MOUNT_PATH',
+    );
   }
 
   async onApplicationShutdown(signal?: string) {

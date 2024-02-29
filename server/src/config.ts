@@ -1,6 +1,7 @@
 import type { LogLevel } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
 import { Feed, FeedIndexer, FeedType } from './types';
+import os from 'node:os';
 
 if (process.env.NODE_ENV !== 'production') {
   try {
@@ -78,7 +79,7 @@ export default () => {
     STREAMARRFS_TORRENT_STOP_AFTER_MS:
       parseInt(process.env.STREAMARRFS_TORRENT_STOP_AFTER_MS) || 1000 * 60,
     STREAMARRFS_TORRENT_MAX_READY:
-      parseInt(process.env.STREAMARRFS_TORRENT_MAX_READY) || 2,
+      parseInt(process.env.STREAMARRFS_TORRENT_MAX_READY) || 1,
     STREAMARRFS_TORRENT_START_TIMEOUT:
       parseInt(process.env.STREAMARRFS_TORRENT_START_TIMEOUT) || 1000 * 60 * 2,
     STREAMARRFS_TORRENT_INDEXER_CONCURRENCY:
@@ -92,7 +93,7 @@ export default () => {
       parseInt(process.env.STREAMARRFS_WEBTORRENT_DOWNLOAD_LIMIT) || -1,
     STREAMARRFS_WEBTORRENT_DOWNLOAD_PATH:
       process.env.STREAMARRFS_WEBTORRENT_DOWNLOAD_PATH ??
-      '/tmp/streamarrfs-downloads',
+      `${os.tmpdir()}/streamarrfs-downloads`,
     STREAMARRFS_WEBTORRENT_TORRENT_PORT:
       parseInt(process.env.STREAMARRFS_WEBTORRENT_TORRENT_PORT) || 0,
 
@@ -107,7 +108,7 @@ export default () => {
     STREAMARRFS_JACKETTE_FEEDS,
 
     STREAMARRFS_MOUNT_PATH:
-      process.env.STREAMARRFS_MOUNT_PATH ?? '/tmp/streamarrfs-mnt',
+      process.env.STREAMARRFS_MOUNT_PATH ?? `${os.tmpdir()}/streamarrfs-mnt`,
     STREAMARRFS_SERVER_PORT:
       parseInt(process.env.STREAMARRFS_SERVER_PORT) || 3000,
 
