@@ -121,8 +121,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     try {
       await pUnmountInstance;
     } catch (err) {
-      this.logger.error(`ERROR unmounting by instance ${this.getMountPath()}`);
-      this.logger.error(err);
+      this.logger.warn(`ERROR unmounting by instance ${this.getMountPath()}`);
+      this.logger.warn(err);
     }
   }
 
@@ -138,7 +138,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       await pUnmount;
       this.logger.log(`Unmounted successfully`);
     } catch (err) {
-      this.logger.error(`ERROR unmounting ${this.getMountPath()}`);
+      this.logger.warn(`ERROR unmounting ${this.getMountPath()}`);
     }
   }
 
@@ -169,7 +169,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       await rm(mountPath, { recursive: true, force: true });
       await mkdir(mountPath, { recursive: true });
     } catch (err) {
-      this.logger.error(err, `ERROR wiping mountpath=${mountPath}`);
+      this.logger.warn(err, `ERROR wiping mountpath=${mountPath}`);
     }
   }
 

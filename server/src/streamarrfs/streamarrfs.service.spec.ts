@@ -13,10 +13,10 @@ import { torrentMultipleFiles } from './fixtures/torrent-multiple-files';
 import { torrentNotVisible } from './fixtures/torrent-not-visibile';
 
 describe('StreamarrFsService', () => {
-  const mountPath =
-    process.env.STREAMARRFS_MOUNT_PATH ?? '/tmp/streamarrfs-mnt';
   let streamarrFsService: StreamarrFsService;
   let torrentService: TorrentsService;
+  let configService: ConfigService;
+  let mountPath: string;
 
   beforeAll(async () => {
     try {
@@ -29,7 +29,18 @@ describe('StreamarrFsService', () => {
         ...EventEmitterTestingModule(),
       ],
       providers: [
-        ConfigService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              // this is being super extra, in the case that you need multiple keys with the `get` method
+              if (key === 'STREAMARRFS_MOUNT_PATH') {
+                return '/tmp/streamarrfs-mnt';
+              }
+              return null;
+            }),
+          },
+        },
         useTorrentUtilProvider(),
         TorrentsService,
         StreamarrFsService,
@@ -43,6 +54,9 @@ describe('StreamarrFsService', () => {
       .compile();
     torrentService = module.get<TorrentsService>(TorrentsService);
     streamarrFsService = module.get<StreamarrFsService>(StreamarrFsService);
+    configService = module.get<ConfigService>(ConfigService);
+    mountPath = configService.get<string>('STREAMARRFS_MOUNT_PATH');
+
     await streamarrFsService.onModuleInit();
   });
 
