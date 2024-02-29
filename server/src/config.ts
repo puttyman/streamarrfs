@@ -12,11 +12,11 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 function getFeedType(feedKey): FeedType {
-  if (/rss/gi.test(process.env[feedKey])) {
+  if (/rss/gi.test(feedKey)) {
     return FeedType.RSS;
   }
 
-  if (/json/gi.test(process.env[feedKey])) {
+  if (/json/gi.test(feedKey)) {
     return FeedType.JSON;
   }
 

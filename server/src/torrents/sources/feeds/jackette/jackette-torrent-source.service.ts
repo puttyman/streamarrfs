@@ -1,9 +1,10 @@
 import { ConfigService } from '@nestjs/config';
-import config from '../../../../config';
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
+import { promisify } from 'node:util';
 import RssParser from 'rss-parser';
 
+import config from '../../../../config';
 import { TorrentsService } from '../../../torrents.service';
 import { FeedType, type Feed } from '../../../../types';
 import { TorrentInfoStatus } from '../../../db/entities/torrent.entity';
@@ -14,7 +15,6 @@ export class JacketteTorrentSourceService implements OnApplicationBootstrap {
   private isTaskRunning: boolean;
   private rssParser;
   private feeds;
-  private jobCronExpression;
 
   constructor(
     private readonly torrentService: TorrentsService,
@@ -28,14 +28,12 @@ export class JacketteTorrentSourceService implements OnApplicationBootstrap {
     this.feeds = this.configService.get<Array<Feed>>(
       'STREAMARRFS_JACKETTE_FEEDS',
     );
-    this.jobCronExpression =
-      this.configService.get<string>(
-        'STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION',
-      ) || CronExpression.EVERY_HOUR;
   }
 
   async onApplicationBootstrap() {
-    this.runJob();
+    const delay = promisify(setTimeout);
+    await delay(5000);
+    await this.runJob();
   }
 
   @Cron(config().STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION, {
@@ -61,6 +59,11 @@ export class JacketteTorrentSourceService implements OnApplicationBootstrap {
       for (const feed of this.feeds) {
         if (feed.type === FeedType.RSS) {
           await this.processRssFeed(feed);
+          continue;
+        }
+
+        if (feed.type === FeedType.JSON) {
+          await this.processJsonFeed(feed);
           continue;
         }
         this.logger.warn(`Unsupported feed type=${feed.type}`);
@@ -93,6 +96,53 @@ export class JacketteTorrentSourceService implements OnApplicationBootstrap {
             isVisible: false,
           });
         }
+      }
+    } catch (err) {
+      this.logger.error(`Error processing feed=${feed.name}`);
+      this.logger.error(err);
+    }
+  }
+
+  async processJsonFeed(feed: Feed) {
+    try {
+      const resp = await fetch(feed.url);
+
+      if (resp.status === 200) {
+        const jsonData = await resp.json();
+        const torrents = jsonData?.Results || [];
+
+        this.logger.log(
+          `received ${torrents.length ?? 'no'} items from feed=${feed.name}`,
+        );
+        for (const torrent of torrents) {
+          const torrentGuid = torrent?.Guid || null;
+          let torrentLink = torrent?.Link || null;
+
+          if (torrentLink === null && `${torrentGuid}`.startsWith('magnet')) {
+            torrentLink = torrentGuid;
+          }
+
+          if (torrentGuid === null || torrentLink === null) {
+            this.logger.warn(torrent, `torrent missing required fields`);
+            continue;
+          }
+          const existingTorrent =
+            await this.torrentService.findOneByFeedGuid(torrentGuid);
+          if (!existingTorrent) {
+            await this.torrentService.create({
+              feedGuid: torrentGuid,
+              feedURL: torrentLink,
+              status: TorrentInfoStatus.NEW,
+              isVisible: false,
+            });
+          }
+        }
+      }
+
+      if (resp.status !== 200) {
+        this.logger.error(
+          `Error processing feed=${feed.name} http status not 200`,
+        );
       }
     } catch (err) {
       this.logger.error(`Error processing feed=${feed.name}`);
