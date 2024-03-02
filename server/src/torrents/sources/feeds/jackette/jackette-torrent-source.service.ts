@@ -30,10 +30,12 @@ export class JacketteTorrentSourceService implements OnApplicationBootstrap {
     );
   }
 
+  // Always run the job on startup after bit of delay
   async onApplicationBootstrap() {
     const delay = promisify(setTimeout);
-    await delay(5000);
-    await this.runJob();
+    delay(5000).then(() => {
+      this.runJob();
+    });
   }
 
   @Cron(config().STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION, {

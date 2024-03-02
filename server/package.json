@@ -46,7 +46,7 @@
     "rss-parser": "^3.13.0",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.17",
-    "webtorrent": "git@github.com:puttyman/webtorrent.git"
+    "webtorrent": "^2.1.36"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.2.1",

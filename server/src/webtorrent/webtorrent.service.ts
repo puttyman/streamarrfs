@@ -4,7 +4,7 @@ import pTimeout, { TimeoutError } from 'p-timeout';
 import WebTorrent from 'webtorrent';
 import { TorrentUtil } from '../torrent-util/torrent.util';
 
-import type { TorrentInfo } from '../types';
+import type { StreamarrFsTorrent, TorrentInfo } from '../types';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 export interface CreateServerOptions {
@@ -24,12 +24,6 @@ export type WebTorrentV2 = WebTorrent.WebTorrent & {
   new (config?: WebTorrentV2Options): WebTorrent.Instance;
   (config?: WebTorrentV2Options): WebTorrent.Instance;
 };
-
-export interface StreamarrFsTorrent extends WebTorrent.Torrent {
-  status: 'running' | 'pausing' | 'paused' | 'stopping';
-  lastReadDate: number;
-  activeReads?: number;
-}
 
 export interface TorrentOptionsV2 extends WebTorrent.TorrentOptions {
   paused?: boolean;
@@ -91,10 +85,10 @@ export class WebTorrentService implements OnApplicationShutdown {
         uploadSpeed: smTorrent.uploadSpeed,
         downloaded: smTorrent.downloaded,
         paused: smTorrent.paused,
-        status: smTorrent.status ?? '',
+        status: smTorrent.status ?? 'na',
         lastReadDate: smTorrent.lastReadDate ?? '',
         activeReads: smTorrent.activeReads ?? 0,
-      };
+      } as Partial<StreamarrFsTorrent>;
     });
   }
 
@@ -377,7 +371,7 @@ export class WebTorrentService implements OnApplicationShutdown {
     }
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS, {
+  @Cron(CronExpression.EVERY_30_SECONDS, {
     name: `${WebTorrentService.name} - updateTorrentStatus`,
   })
   async updateTorrentStatus() {
@@ -419,7 +413,7 @@ export class WebTorrentService implements OnApplicationShutdown {
     }
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS, {
+  @Cron(CronExpression.EVERY_30_SECONDS, {
     name: `${WebTorrentService.name} - pauseOrStopTorrents`,
   })
   async pauseOrStopTorrents() {

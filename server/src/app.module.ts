@@ -1,4 +1,4 @@
-import { Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -26,8 +26,7 @@ import { TorrentsController } from './torrents/torrents.controller';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'static'),
-      exclude: ['/api/(.*)'],
+      rootPath: join(__dirname, 'client'),
     }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
@@ -67,5 +66,6 @@ import { TorrentsController } from './torrents/torrents.controller';
   ],
 })
 export class AppModule implements NestModule {
-  configure() {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  configure(consumer: MiddlewareConsumer) {}
 }
