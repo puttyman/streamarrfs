@@ -12,7 +12,7 @@ import WebTorrent, { TorrentFile } from 'webtorrent';
 import { TorrentsService } from '../torrents/torrents.service';
 import { WebTorrentService } from '../webtorrent/webtorrent.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { StreamarrFsFileEvent } from '../types';
+import { StreamarrFsFileEvent, StreamarrFsTorrent } from '../types';
 
 type FuseCallback = (returnCode: number, ...args: any) => void;
 export type FileStat = {
@@ -30,11 +30,6 @@ export type TorrentFileTree = {
   isDir: boolean;
 };
 
-export interface StreamarrFsTorrent extends WebTorrent.Torrent {
-  status: 'running' | 'pausing' | 'paused' | 'stopping';
-  lastReadDate: number;
-  activeReads?: number;
-}
 @Injectable()
 export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
   private readonly logger = new Logger(StreamarrFsService.name);
@@ -332,7 +327,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
         const infoHash = this.getInfoHashFromPath(path);
 
         // Check if the torrent exists
-        const torrent = await this.torrentService.findOneByInfoHash(infoHash);
+        const torrent =
+          await this.torrentService.findOneVisibleByInfoHash(infoHash);
         if (!torrent) {
           return process.nextTick(cb, Fuse.ENOENT);
         }
@@ -406,7 +402,7 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
       if (this.isPathStartsWithTorrentHash(path)) {
         const infoHash = this.getInfoHashFromPath(path);
 
-        if (!(await this.torrentService.findOneByInfoHash(infoHash))) {
+        if (!(await this.torrentService.findOneVisibleByInfoHash(infoHash))) {
           return process.nextTick(cb, Fuse.ENOENT);
         }
 
@@ -557,7 +553,8 @@ export class StreamarrFsService implements OnModuleInit, OnApplicationShutdown {
     }
 
     if (!resumedTorrent) {
-      const torrentInfo = await this.torrentService.findOneByInfoHash(infoHash);
+      const torrentInfo =
+        await this.torrentService.findOneVisibleByInfoHash(infoHash);
 
       const torrentInClient =
         await this.webtorrentService.getTorrentWithInfoHash(infoHash);

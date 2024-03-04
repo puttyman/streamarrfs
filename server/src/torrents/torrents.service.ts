@@ -107,6 +107,13 @@ export class TorrentsService {
     });
   }
 
+  findOneVisibleByInfoHash(infoHash) {
+    return this.torrentsRepository.findOneBy({
+      infoHash: Equal(infoHash),
+      isVisible: Equal(true),
+    });
+  }
+
   findOneByFeedGuid(feedGuid) {
     return this.torrentsRepository.findOneBy({
       feedGuid: Equal(feedGuid),

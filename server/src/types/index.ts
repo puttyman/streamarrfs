@@ -1,4 +1,5 @@
 import type { TorrentFile } from 'webtorrent';
+import WebTorrent from 'webtorrent';
 
 export type StreamarrFsFileEvent = {
   infoHash: string;
@@ -30,3 +31,9 @@ export type TorrentInfo = {
   files?: Array<Pick<TorrentFile, 'name' | 'path' | 'length'>>;
   sourceType: 'magnet' | 'file';
 };
+
+export interface StreamarrFsTorrent extends WebTorrent.Torrent {
+  status: 'na' | 'running' | 'pausing' | 'paused' | 'stopping';
+  lastReadDate: number;
+  activeReads?: number;
+}
