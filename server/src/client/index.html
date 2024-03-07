@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streamarrfs | Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+</head>
+<div class="container">
+  <div class="stats">
+    <h3>streamarrfs</h3>
+    <div>
+      <div id="sse" hx-ext="sse" sse-connect="/api/streamarrfs/sse">
+        <!-- Data will be populated dynamically-->
+        <div id="sse2" sse-swap="message" style="display: none;"></div>
+      </div>
+      <h4>Streaming torrents
+        <form hx-post="/api/streamarrfs/actions" hx-swap="none">
+          <table id="streamingTorrents">
+            <thead>
+              <tr>
+                <th>Actions</th>
+                <th>Name</th>
+                <th>Ready</th>
+                <th>Up (MB/s)</th>
+                <th>Down (MB/s)</th>
+                <th>Downloaded (MB)</th>
+                <th>Paused</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <td colspan="8">No torrents</td>
+            </tbody>
+          </table>
+        </form>
+      </h4>
+      <h4>Indexing torrents</h4>
+      <table id="indexingTorrents">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Ready</th>
+            <th>Up</th>
+            <th>Down</th>
+            <th>Downloaded</th>
+            <th>Paused</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const streamingTableBody = document.getElementById('streamingTorrents').querySelector('tbody');
+    const indexingTableBody = document.getElementById('indexingTorrents').querySelector('tbody');
+    // Listen for SSE updates
+    document.querySelector('#sse').addEventListener('htmx:sseMessage', function (event) {
+      const data = JSON.parse(event ?.detail?.data || '[]');
+      renderTorrents(streamingTableBody, data.streamingTorrents);
+      renderTorrents(indexingTableBody, data.indexingTorrents);
+    });
+
+    function renderTorrents(tBody, torrents) {
+      tBody.innerHTML = ''; // Clear previous data
+      torrents.forEach(function (torrent) {
+        var row = document.createElement('tr');
+        row.innerHTML = `
+<td><button style="background-color: red;" name="stop" value="${torrent.infoHash}">Stop</button></td>
+<td>${torrent.name}</td>
+<td>${torrent.ready}</td>
+<td>${torrent.uploadSpeed}</td>
+<td>${torrent.downloadSpeed}</td>
+<td>${torrent.downloaded}</td>
+<td>${torrent.paused}</td>
+<td>${torrent.status}</td>
+`;
+        tBody.appendChild(row);
+      });
+    }
+  });
+</script>
+<script src="https://unpkg.com/htmx.org/dist/htmx.js"></script>
+<script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>

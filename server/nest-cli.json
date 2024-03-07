@@ -6,8 +6,8 @@
     "deleteOutDir": true,
     "assets": [
       {
-        "include": "static/**",
-        "outDir": "dist/",
+        "include": "client/**",
+        "outDir": "dist/src",
         "watchAssets": true
       }
     ]

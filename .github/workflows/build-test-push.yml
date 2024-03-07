@@ -30,7 +30,7 @@ jobs:
         run: |
           cd docker/compose
           docker-compose build streamarrfs-test
-      - name: Run unit test
+      - name: Run tests
         shell: bash
         run: |
           cd docker/compose
