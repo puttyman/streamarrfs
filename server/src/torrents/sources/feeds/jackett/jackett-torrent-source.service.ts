@@ -10,8 +10,8 @@ import { FeedType, type Feed } from '../../../../types';
 import { TorrentInfoStatus } from '../../../db/entities/torrent.entity';
 
 @Injectable()
-export class JacketteTorrentSourceService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(JacketteTorrentSourceService.name);
+export class JackettTorrentSourceService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(JackettTorrentSourceService.name);
   private isTaskRunning: boolean;
   private rssParser;
   private feeds;
@@ -26,7 +26,7 @@ export class JacketteTorrentSourceService implements OnApplicationBootstrap {
       },
     });
     this.feeds = this.configService.get<Array<Feed>>(
-      'STREAMARRFS_JACKETTE_FEEDS',
+      'STREAMARRFS_JACKETT_FEEDS',
     );
   }
 
@@ -36,12 +36,12 @@ export class JacketteTorrentSourceService implements OnApplicationBootstrap {
     await this.runJob();
   }
 
-  @Cron(config().STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION, {
-    name: JacketteTorrentSourceService.name,
+  @Cron(config().STREAMARRFS_JACKETT_CRON_JOB_EXPRESSION, {
+    name: JackettTorrentSourceService.name,
   })
   async runJob() {
     if (
-      this.configService.get<string>('STREAMARRFS_JACKETTE_FEED_DISABLED') ===
+      this.configService.get<string>('STREAMARRFS_JACKETT_FEED_DISABLED') ===
       'true'
     ) {
       this.logger.verbose(`aborting feed is disabled`);

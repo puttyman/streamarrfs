@@ -30,4 +30,6 @@ COPY --from=proddeps /server/dist /server/dist
 COPY --from=proddeps /server/db /server/db
 COPY --from=proddeps /server/node_modules /server/node_modules
 COPY --from=proddeps /server/*.json /server/
+
+EXPOSE 3000
 CMD ["npm", "run", "start"]

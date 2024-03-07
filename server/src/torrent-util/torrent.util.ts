@@ -55,7 +55,7 @@ export class TorrentUtil {
     return this.toMagnetURILib(torrent);
   }
 
-  async getInfoHashFromJacketteUrl(torrentUrl: string) {
+  async getInfoHashFromJackettUrl(torrentUrl: string) {
     const resp = await fetch(torrentUrl, {
       method: 'get',
       redirect: 'manual',
@@ -85,9 +85,7 @@ export class TorrentUtil {
     return null;
   }
 
-  async getTorrentInfoFromJacketteUrl(
-    torrentUrl: string,
-  ): Promise<TorrentInfo> {
+  async getTorrentInfoFromJackettUrl(torrentUrl: string): Promise<TorrentInfo> {
     const resp = await fetch(torrentUrl, {
       method: 'get',
       redirect: 'manual',
@@ -131,7 +129,7 @@ export class TorrentUtil {
     return null;
   }
 
-  async getMagnetLinkFromJacketteUrl(torrentUrl: string) {
+  async getMagnetLinkFromJackettUrl(torrentUrl: string) {
     const resp = await fetch(torrentUrl, {
       method: 'get',
       redirect: 'manual',

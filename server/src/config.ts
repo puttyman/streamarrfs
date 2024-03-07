@@ -35,11 +35,11 @@ function getFeedIndexer(feedKey): FeedIndexer {
   return FeedIndexer.JACKETT;
 }
 
-const STREAMARRFS_JACKETTE_FEEDS = Object.keys(process.env)
+const STREAMARRFS_JACKETT_FEEDS = Object.keys(process.env)
   .filter((envName) =>
     envName.startsWith(
       process.env.STREAMARRFS_JACKETT_FEED_URL_PREFIX ||
-        'STREAMARRFS_JACKETTE_FEED_URL_ITEM',
+        'STREAMARRFS_JACKETT_FEED_URL_ITEM',
     ),
   )
   .map((feedKey) => {
@@ -99,13 +99,13 @@ export default () => {
 
     STREAMARRFS_JACKETT_FEED_URL_PREFIX:
       process.env.STREAMARRFS_JACKETT_FEED_URL_PREFIX ??
-      'STREAMARRFS_JACKETTE_FEED_URL_ITEM',
-    STREAMARRFS_JACKETTE_FEED_DISABLED:
-      process.env.STREAMARRFS_JACKETTE_FEED_DISABLED ?? 'false',
-    STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION:
-      process.env.STREAMARRFS_JACKETTE_CRON_JOB_EXPRESSION ??
+      'STREAMARRFS_JACKETT_FEED_URL_ITEM',
+    STREAMARRFS_JACKETT_FEED_DISABLED:
+      process.env.STREAMARRFS_JACKETT_FEED_DISABLED ?? 'false',
+    STREAMARRFS_JACKETT_CRON_JOB_EXPRESSION:
+      process.env.STREAMARRFS_JACKETT_CRON_JOB_EXPRESSION ??
       CronExpression.EVERY_HOUR,
-    STREAMARRFS_JACKETTE_FEEDS,
+    STREAMARRFS_JACKETT_FEEDS: STREAMARRFS_JACKETT_FEEDS,
 
     STREAMARRFS_MOUNT_PATH:
       process.env.STREAMARRFS_MOUNT_PATH ?? `${os.tmpdir()}/streamarrfs-mnt`,

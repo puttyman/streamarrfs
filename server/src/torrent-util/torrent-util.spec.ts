@@ -13,7 +13,7 @@ describe('TorrentUtil', () => {
     torrentUtil = app.get<TorrentUtil>(TorrentUtil);
   });
 
-  describe('getMagnetLinkFromJacketteUrl', () => {
+  describe('getMagnetLinkFromJackettUrl', () => {
     jest.spyOn(global, 'fetch').mockResolvedValueOnce(
       new Response('', {
         status: 302,
@@ -23,18 +23,18 @@ describe('TorrentUtil', () => {
         },
       }),
     );
-    it('it should return the magnet link from a jackette url', async () => {
-      const magnetUrl = await torrentUtil.getMagnetLinkFromJacketteUrl(
+    it('it should return the magnet link from a jackett url', async () => {
+      const magnetUrl = await torrentUtil.getMagnetLinkFromJackettUrl(
         'http://jacket/torrent/url/magnet',
       );
       expect(magnetUrl).toBe('magnet://');
     });
   });
 
-  describe('getTorrentInfoFromJacketteUrl', () => {
+  describe('getTorrentInfoFromJackettUrl', () => {
     it('it should throw when fetch failed', async () => {
       expect(
-        torrentUtil.getTorrentInfoFromJacketteUrl('http://jackett/torrent'),
+        torrentUtil.getTorrentInfoFromJackettUrl('http://jackett/torrent'),
       ).rejects.toThrow();
     });
 
@@ -47,7 +47,7 @@ describe('TorrentUtil', () => {
       );
 
       const torrentInfo =
-        await torrentUtil.getTorrentInfoFromJacketteUrl('http://jackett/404');
+        await torrentUtil.getTorrentInfoFromJackettUrl('http://jackett/404');
       expect(torrentInfo).toBeNull();
     });
   });

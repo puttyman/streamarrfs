@@ -117,7 +117,7 @@ export class TorrentIndexerService {
         torrent,
         TorrentInfoStatus.PROCESSING,
       );
-      torrentInfo = await this.torrentUtil.getTorrentInfoFromJacketteUrl(
+      torrentInfo = await this.torrentUtil.getTorrentInfoFromJackettUrl(
         torrent.feedURL,
       );
     }
