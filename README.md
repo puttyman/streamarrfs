@@ -4,7 +4,7 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [âš
 
 ## How does it work?
   1. Streamarrfs finds torrents from your favorite torrent indexer. e.g. [Jackett](https://github.com/Jackett/Jackett)
-  2. Stores info about torrents and including files in its internal database (sqlite).
+  2. Stores info about torrents and including files in its internal database (sqlite3).
   3. Mount and creates a virtual directory through [fuse](https://github.com/libfuse/libfuse) to simulate as if the files in the torrents are present locally.
   4. Whenever a read if requested to a file, Streamarrfs starts the torrent and stream through the portion of the file requested.
   5. When streaming has stopped the torrent in the client is destroyed and including the file on disk.
@@ -20,17 +20,35 @@ Streamarrfs allows to stream torrents via plex, jellyfin and etc. Powered by [âš
 ### Supported Indexes
   - [Jackett](https://github.com/Jackett/Jackett)
 
-## Setup instructions - Plex
+## Setup instructions
 
-At the present this project only supports running as a docker image and on a amd64 architecture. PRs are welcomed for any features and bug fixes. Given this project is at an experimental stage it is recommend to use a seperate plex server instance.
+At the present this project only supports running as a docker image and on a x86_64 architecture. PRs are welcomed for any features and bug fixes. Given this project is at an experimental stage it is recommended to use a seperate plex server instance.
 
 ### Dependencies & Prerequisites
-  - A plex account and able to generate a claim token at https://www.plex.tv/claim/ .
   - Fuse v2 (host).
-  - Docker & Docker compose v3 (host).
-  - Root access. Running the image as a user should be possible with a few tweaks.
 
-## Steps (Tested on Ubuntu 22.04 LTS)
+    ```bash
+    # On Ubuntu 22.04 LTS you may install this with the commands below.
+    apt update
+    apt apt install fuse libfuse2 libfuse-dev -y
+    ```
+  - Docker & Docker compose v2 (host).
+
+    ```bash
+    # On Ubuntu 22.04 LTS you may install this with the commands below.
+    apt update
+    apt install docker.io
+    # Install docker compose v2
+    # See: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-22-04
+    # Confirm you have docker and compose v2.x.x
+    # Note make sure you have at least docker-compose 2.24
+    docker info
+    docker compose version
+    ```
+  - Root access. Running the image as a user should be possible with a few tweaks.
+  - Hardware. Recommended minimum of 8gb RAM due to a [webtorrent issue](https://github.com/webtorrent/webtorrent/issues/1973).
+
+### Common steps for Plex & Jellyfin (Tested on Ubuntu 22.04 LTS)
 
   1. Make sure your server has the fuse at `/dev/fuse`.
 
@@ -39,33 +57,91 @@ At the present this project only supports running as a docker image and on a amd
   2. SSH as root with command:
   
     sudo su
-  
-  3. Install docker engine & docker compose (you may skip if you already have docker and compose)
 
-    apt update && apt install docker.io && apt install docker-compose
+  4. Create a directory where the torrents will be mounted.
+  
+    mkdir /tmp/streamarrfs-tmp
+  
+  5. Create & change to directory for the docker compose file.
+  
+    mkdir /opt/streamarrfs && cd /opt/streamarrfs
+  
+  6. Create the docker-compose.yml file from the examples. 
+    
+  ```bash
+  curl https://raw.githubusercontent.com/puttyman/streamarrfs/master/examples/plex/docker-compose.yml > docker-compose.yml
+  ```
 
-  4. Create a directory where the torrents will be mounted
-  
-    mkdir /tmp/streamarrfs
-  
-  5. Create a directory for the docker compose file 
-  
-    mkdir /opt/streamarrfs
-  
-  6. Edit the content of the docker-compose.yml file. 
-    `nano /opt/streamarrfs/docker-compose.yml`
-  7. Paste the content from the example [docker-compose.yml](examples/plex/docker-compose.yml) file.
-  8. Generate a claim token at https://www.plex.tv/claim/ .
-  9. Update the `PLEX_CLAIM` with the token generated at 8.
-  10. Save and start with `docker-compose up`
+  7. Start the docker compose stack 
 
-## Setup instructions - Jellyfin - TODO
+  ```bash
+  docker compose up -d
+  ```
+  8. The streamarrfs files should now be available under **/streamarrfs** of the plex container which can be added as a media library. If you are unsure how to do so continue to [Adding the streamarrfs files as a media libray](#Adding the streamarrfs files as a media libray).
 
-TODO
+### Adding the streamarrfs files as a media libray
+
+#### Plex
+
+  1. On a browser to your plex instance. Based example on the docker file plex should be listening on the IP of your host machine.
+
+  ```bash
+  open http://{YOUR_HOST_IP}:32400/web
+  ```
+
+  2. Follow the [Official Plex Basic Setup Wizard](https://support.plex.tv/articles/200288896-basic-setup-wizard/)
+
+  3. At **Step 10.** add the folder **/streamarrfs** as the media library.
+
+  4. Optional for optimal experience. In the **Advanced** section. **Disable** the following options:
+
+      4.1 Prefer artwork based on library language
+      
+      4.2 Disable Include related external content
+
+      4.3 Use local assets
+
+      4.4 Enable video preview thumbnails
+  5. Save your media library and you may now test plex with the sample free torrents
+  6. To add a Jackett feed. See [Adding Jackett indexers to Streamarrfs](#Adding Jackett indexers to Streamarrfs)
+
+#### Jellyfin (TODO)
+
+### Adding Jackett indexers to Streamarrfs
+
+  1. Create your desired Jackett indexer. The [example](https://raw.githubusercontent.com/puttyman/streamarrfs/master/examples/plex/docker-compose.yml) should have an instance running at `http://{YOUR_HOST_IP}:9117`. If you are unsure how to do so follow this [guide](https://www.rapidseedbox.com/blog/guide-to-jackett).
+  
+  2. Copy the RSS link of your indexer from your Jackett web portal.
+  3. In the docker-compose.yaml file add a new environment variable named `STREAMARRFS_JACKETT_FEED_URL_ITEM_${NAME}`. Replace `NAME` with any name so you can uniquely identify your indexer. The value of the variable is the RSS link of your indexer from Jackett. Example below.
+
+  ```yml
+      environment:
+        - NODE_ENV=production
+        - STREAMARRFS_JACKETT_FEED_URL_ITEM_YTS=http://HOST:9117/api/v2.0/indexers/yts/results/torznab/api?apikey=key&t=search&cat=&q=
+  ```
+  4. Restart your docker stack. `docker compose restart`.
+  5. Enjoy.
+
+## Container environment variables
+
+Note: some variables are undocumented.
+
+| Variable | Description |
+| --- | ----------- |
+| STREAMARRFS_JACKETT_FEED_URL_PREFIX | The prefix of the environment variable to look for jackett feed URLs. Default = `STREAMARRFS_JACKETT_FEED_URL_ITEM` |
+| STREAMARRFS_JACKETT_FEED_URL_ITEM_* | The prefix for a jackett feed URL |
+| STREAMARRFS_LOG_LEVEL | Can be a list seperated by comma for multiple log level. e.g. debug,error,fatal,log,warn,verbose . Default for production error,log |
+| STREAMARRFS_ADD_FREE_TORRENTS | Add some free torrents on startup. Default = true |
+| STREAMARRFS_TORRENT_PAUSE_AFTER_MS | The time to wait when no read activity is detected to pause a torrent. |
+| STREAMARRFS_TORRENT_STOP_AFTER_MS | The time to wait when no read activity is detected to stop a torrent. |
+| STREAMARRFS_TORRENT_MAX_READY | The maximum number of torrents allowed to be streaming at any given time. Default = 1. |
+| STREAMARRFS_TORRENT_START_TIMEOUT | The timeout for a torrent to be in a readable state. Default = 2mins. |
+| STREAMARRFS_TORRENT_INDEXER_CONCURRENCY | The number of concurrent torrents which can be indexed at any given time. Default = 1. |
+| STREAMARRFS_WEBTORRENT_MAX_CONNS | The max connections per torrent. Default = 1. |
 
 ## Development
 
-### Linux/WSL (Ubuntu 22 LTS) dependencies
+### Linux/WSL (Ubuntu 22.04 LTS) dependencies
   1. Install libfuse
 
     apt update
@@ -96,7 +172,9 @@ TODO
 
 #### Is there a web GUI?
 
-Given project is experimental and if successful it will be implemented. PR welcomed.
+There is a simple web gui available at http://{YOUR_SERVER_IP}:3000/web. This GUI should allow you to view stats of streaming and indexing torrent.
+
+The UI also allow you stop them in case you do not wish to wait for the automatic cleanup.
 
 #### Why stream when I can download?
 

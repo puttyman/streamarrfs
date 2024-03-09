@@ -10,17 +10,13 @@ services:
         restart: true
     healthcheck:
       test: ["CMD", "ls", "-d", "/streamarrfs/healthcheck"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       start_period: 5s
     volumes:
         - streamarrfs-plex-config:/config
         - streamarrfs-plex-transcode:/transcode
-        - /tmp/streamarrfstmp/streamarrfs:/streamarrfs:ro
-    #environment:
-        #TZ: 'Australia/Melbourne'
-        #PLEX_CLAIM: 'claim-XXXXXjaNF4Y7CW5Agy9'
-        #ALLOWED_NETWORKS: '10.0.0.0/24'
+        - /tmp/streamarrfs-tmp/streamarrfs-mnt:/streamarrfs:ro
     logging:
         driver: json-file
         options:
@@ -28,12 +24,11 @@ services:
 
   streamarrfs:
     image: puttyman/streamarrfs:master
-    network_mode: host
+    ports:
+      - 3000:3000
     environment:
       - NODE_ENV=production
-      - STREAMARRFS_WEBTORRENT_DOWNLOAD_PATH=/downloads
-      - STREAMARRFS_MOUNT_PATH=/tmp/streamarrfs
-      - STREAMARRFS_FUSE_AUTO_UNMOUNT=true
+      # - STREAMARRFS_JACKETT_FEED_URL_ITEM_1=http://HOST:9117/api/v2.0/indexers/yts/results/torznab/api?apikey=key&t=search&cat=&q=
     cap_add:
       - SYS_ADMIN
     devices:
@@ -42,12 +37,12 @@ services:
       - apparmor=unconfined
     volumes:
       - streamarrfs-db:/server/db
-      - streamarrfs-downloads:/downloads
+      - streamarrfs-downloads:/streamarrfs-downloads
       - /tmp/streamarrfs-tmp:/tmp:shared
     healthcheck:
-      test: ["CMD", "ls", "-d", "/tmp/streamarrfs/healthcheck"]
-      interval: 30s
-      timeout: 5s
+      test: ["CMD", "ls", "-d", "/tmp/streamarrfs-mnt/healthcheck"]
+      interval: 10s
+      timeout: 10s
       retries: 5
       start_period: 5s
     deploy:
@@ -57,9 +52,33 @@ services:
           memory: 8196M
         reservations:
           memory: 2048M
+  
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    container_name: jackett
+    volumes:
+      - jackett-config:/config
+      - jackett-cache:/downloads
+    ports:
+      - 9117:9117
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:9117"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 256M
 
 volumes:
   streamarrfs-plex-config:
   streamarrfs-plex-transcode:
   streamarrfs-downloads:
   streamarrfs-db:
+  jackett-config:
+  jackett-cache:

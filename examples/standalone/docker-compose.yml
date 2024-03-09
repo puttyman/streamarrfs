@@ -1,12 +1,12 @@
 version: '3'
 services:
   streamarrfs:
-    image: puttyman/streamarrfs:latest
+    image: puttyman/streamarrfs:master
     ports:
       - 3000:3000
     environment:
-      - STREAMARRFS_DB_PATH=/db/streamarr.sqlite
-      - NODE_ENV=development
+      - NODE_ENV=production
+      # - STREAMARRFS_JACKETT_FEED_URL_ITEM_1=http://HOST:9117/api/v2.0/indexers/yts/results/torznab/api?apikey=key&t=search&cat=&q=
     cap_add:
       - SYS_ADMIN
     devices:
@@ -14,13 +14,23 @@ services:
     security_opt:
       - apparmor=unconfined
     volumes:
-      - /tmp/streamarrfs-db:/db
-      - /tmp/streamarrfs-downloads:/downloads
-      - /tmp:/tmp:shared
-    command: npm run start:prod
+      - streamarrfs-db:/server/db
+      - streamarrfs-downloads:/streamarrfs-downloads
+      - /tmp/streamarrfs-tmp:/tmp:shared
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
-      interval: 30s
+      test: ["CMD", "ls", "-d", "/tmp/streamarrfs-mnt/healthcheck"]
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 5s
+    deploy:
+      # Note only resouces is allowed by docker compose. Others are ignored
+      resources:
+        limits:
+          memory: 8196M
+        reservations:
+          memory: 2048M
+
+volumes:
+  streamarrfs-downloads:
+  streamarrfs-db:
