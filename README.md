@@ -82,7 +82,7 @@ At the present this project only supports running as a docker image and on a x86
   ```bash
   docker compose up -d
   ```
-  8. Streamarrfs should now have the files of torrents mounted under **/tmp/streamarrfs-tmp/streamarrfs**. You may now access the files directly on your host or mount it to another docker container e.g. Plex or Jellyfin. If you are unsure how to do so continue to [Adding the streamarrfs files as a media libray](https://github.com/puttyman/streamarrfs?tab=readme-ov-file#adding-the-streamarrfs-files-as-a-media-libray).
+  8. Streamarrfs should now have the files of torrents mounted under **/tmp/streamarrfs-tmp/streamarrfs-mnt/**. You may now access the files directly on your host or mount it to another docker container e.g. Plex or Jellyfin. If you are unsure how to do so continue to [Adding the streamarrfs files as a media libray](https://github.com/puttyman/streamarrfs?tab=readme-ov-file#adding-the-streamarrfs-files-as-a-media-libray).
 
 ### Adding the streamarrfs files as a media libray
 
@@ -121,7 +121,7 @@ The instructions below is based on the [example](https://raw.githubusercontent.c
   1. Create your desired Jackett indexer. The [example](https://raw.githubusercontent.com/puttyman/streamarrfs/master/examples/plex/docker-compose.yml) should have an instance of Jackett running at `http://{YOUR_HOST_IP}:9117`. If you are unsure how to do so follow this [guide](https://www.rapidseedbox.com/blog/guide-to-jackett).
   
   2. Copy the RSS link of your indexer from your Jackett web portal.
-  3. In the [docker-compose.yaml](https://raw.githubusercontent.com/puttyman/streamarrfs/master/examples/plex/docker-compose.yml) file add a new environment variable named `STREAMARRFS_JACKETT_FEED_URL_ITEM_{NAME}`. Replace `{NAME}` with any name so you can uniquely identify your indexer. The value of the variable should be the RSS link of your indexer from Jackett. Example below.
+  3. In the [docker-compose.yaml](https://raw.githubusercontent.com/puttyman/streamarrfs/master/examples/plex/docker-compose.yml) file add a new environment variable named `STREAMARRFS_JACKETT_FEED_URL_ITEM_{NAME}`. Replace `{NAME}` with any name so you can uniquely identify your indexer. The value of the variable should be the RSS link of your indexer from Jackett. You may add any extra query params to fine tune your results from Jackett. Example below.
 
   ```yml
       environment:
