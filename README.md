@@ -1,6 +1,6 @@
 # Streamarrfs (experimental)
 
-Streamarrfs allows to stream movie or tv shows torrents via plex, jellyfin and etc. Powered by ⚡️[webtorrent](https://github.com/webtorrent/webtorrent).
+Streamarrfs allows to stream movies or tv shows torrents via plex, jellyfin and etc. Powered by ⚡️[webtorrent](https://github.com/webtorrent/webtorrent).
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/puttyman) if you like this project.
 
