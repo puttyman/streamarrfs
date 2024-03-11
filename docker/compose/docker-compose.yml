@@ -1,0 +1,41 @@
+version: '3'
+services:
+  streamarrfs:
+    build:
+      context: ../..
+      dockerfile: docker/build.Dockerfile
+      target: prod
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=production
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor=unconfined
+    volumes:
+      - ./db:/server/db
+      - ./tmp/streamarrfs-downloads:/tmp/streamarrfs-downloads
+      - ./tmp/streamarrfs-mnt:/tmp/streamarrfs-mnt:shared
+    command: npm start
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  streamarrfs-test:
+    build:
+      context: ../..
+      dockerfile: docker/build.Dockerfile
+      target: test
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor=unconfined
+    command: npm run test
