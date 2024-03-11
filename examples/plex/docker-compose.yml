@@ -23,7 +23,7 @@ services:
             max-size: 10m
 
   streamarrfs:
-    image: puttyman/streamarrfs:master
+    image: puttyman/streamarrfs:latest
     ports:
       - 3000:3000
     environment:
