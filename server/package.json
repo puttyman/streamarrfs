@@ -1,8 +1,8 @@
 {
   "name": "streamarrfs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Stream movies and tv shows torrents from Plex or Jellyfin.",
-  "author": "sid.im",
+  "author": "puttyman",
   "license": "MIT",
   "scripts": {
     "build": "nest build",
